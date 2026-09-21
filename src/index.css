@@ -1,5 +1,6 @@
 @import '@npm-questionpro/wick-ui-lib/dist/style.css';
 @import '@npm-questionpro/wick-ui-icon/dist/wu-icon.css';
+@import 'material-symbols/outlined.css';
 
 @tailwind base;
 @tailwind components;
@@ -24,7 +25,43 @@ body {
   flex-direction: column;
 }
 
+/* Sticky page header + tabs/search row while content scrolls */
+[data-slot='wu-tab'] > div:first-child {
+  position: sticky;
+  top: 64px;
+  z-index: 10;
+  margin-inline: -32px;
+  padding-inline: 32px;
+  background: #fff;
+  border-block-end: none !important;
+}
+
 /* Fix workspace avatar alignment — center 20px avatar within 32px button and prevent clipping */
+.workspace-item {
+  margin-bottom: 32px;
+}
+
+.livepolls-table tbody tr:hover .row-actions,
+.livepolls-table tbody tr:focus-within .row-actions {
+  opacity: 1;
+  visibility: visible;
+}
+
+.livepolls-table .row-actions {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.workspace-item .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1;
+  color: #1b3380;
+}
+
+.workspace-item [data-sidebar='menu-button'][data-active='true'] .material-symbols-outlined {
+  color: #1b87e6;
+}
+
 .workspace-item [data-sidebar='menu-button'] {
   overflow: visible !important;
 }

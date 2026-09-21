@@ -5,6 +5,7 @@ import About from '@/pages/About';
 import Archive from '@/pages/Archive';
 import Settings from '@/pages/Settings';
 import Workspace from '@/pages/Workspace';
+import LivePolls from '@/pages/LivePolls';
 import NotFound from '@/pages/NotFound';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
         <Route path="workspace" element={<Workspace />} />
+        <Route path="livepolls" element={<LivePolls />} />
         <Route path="archive" element={<Archive />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />

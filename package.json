@@ -50,6 +50,7 @@
 		"cmdk": "^1.1.1",
 		"date-fns": "^4.1.0",
 		"dompurify": "^3.3.1",
+		"material-symbols": "^0.47.3",
 		"motion": "^12.23.26",
 		"react": "^19.0.0",
 		"react-day-picker": "^10.0.1",

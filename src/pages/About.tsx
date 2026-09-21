@@ -13,7 +13,7 @@ export default function About() {
           </Link>
         }
       />
-      <div className="mx-auto w-full max-w-5xl space-y-6 px-6 py-6">
+      <div className="mx-auto w-full max-w-5xl space-y-6 p-8">
         <WuText size="md">
           This project is a Vite + React + TypeScript scaffold with WickUI, Tailwind CSS, React
           Router and Redux Toolkit – tuned for QuestionPro’s design system.

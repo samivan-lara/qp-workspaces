@@ -11,7 +11,6 @@ import {
   WuSidebarItem,
   WuSidebarMenu,
 } from '@npm-questionpro/wick-ui-lib';
-import { WorkspaceAvatar } from '@/components/common/WorkspaceAvatar';
 import { LabSettingsPanel } from '../lab/LabSettingsPanel';
 
 const categories = [
@@ -63,9 +62,9 @@ export function Layout() {
   }, [labOpen]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-screen flex-col overflow-hidden">
       <WuAppHeader
-        productName="QuestionPro UX"
+        productName="LivePolls"
         categories={categories}
         user={{
           profile: {
@@ -87,7 +86,7 @@ export function Layout() {
                 <div className="wu-flex wu-flex-col wu-gap-1">
                   <WuSidebarMenu className="workspace-item">
                     <WuSidebarItem
-                      Icon={<WorkspaceAvatar label="W" />}
+                      Icon={<span className="material-symbols-outlined">workspaces</span>}
                       isActive={location.pathname === '/workspace'}
                     >
                       <Link to="/workspace">Workspace</Link>
@@ -104,6 +103,12 @@ export function Layout() {
                         <Link to={item.to}>{item.label}</Link>
                       </WuSidebarItem>
                     ))}
+                    <WuSidebarItem
+                      Icon={<span className="wc-quiz" aria-hidden="true" />}
+                      isActive={location.pathname === '/livepolls'}
+                    >
+                      <Link to="/livepolls">LivePolls</Link>
+                    </WuSidebarItem>
                   </WuSidebarMenu>
                 </div>
 
@@ -151,7 +156,7 @@ export function Layout() {
 
             <WuFooter>
               <div className="flex w-full items-center justify-between gap-2">
-                <span>QuestionPro UX · Information architecture © {new Date().getFullYear()}</span>
+                <span>LivePolls · Information architecture © {new Date().getFullYear()}</span>
                 <WuButton
                   iconOnly
                   size="sm"

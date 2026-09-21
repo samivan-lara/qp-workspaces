@@ -5,7 +5,7 @@ export default function Archive() {
   return (
     <div className="flex flex-col">
       <SectionHeader title="Archive" actions={<WuButton variant="secondary">Restore</WuButton>} />
-      <div className="mx-auto w-full max-w-5xl space-y-6 px-6 py-6">
+      <div className="mx-auto w-full max-w-5xl space-y-6 p-8">
         <WuText size="md">
           Browse archived items. This is a placeholder for the archive view.
         </WuText>

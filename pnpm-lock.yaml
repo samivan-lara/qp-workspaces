@@ -119,6 +119,9 @@ importers:
       dompurify:
         specifier: ^3.3.1
         version: 3.4.14
+      material-symbols:
+        specifier: ^0.47.3
+        version: 0.47.3
       motion:
         specifier: ^12.23.26
         version: 12.43.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -2303,6 +2306,9 @@ packages:
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
+
+  material-symbols@0.47.3:
+    resolution: {integrity: sha512-I5XSwmoNz6mrL4kawe/JqL2o8TQpo7uYEoBl6eBU3C+FNwv6T+/MwWBs//LH9T6T5dH9WkCrLV7b09QbpEYNrA==}
 
   mdast-util-to-hast@13.2.1:
     resolution: {integrity: sha512-cctsq2wp5vTsLIcaymblUriiTcZd0CwWtCbLvrOzYCDZoWyMNV8sZ7krj09FSnsiJi3WVsHLM4k6Dq/yaPyCXA==}
@@ -5067,6 +5073,8 @@ snapshots:
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  material-symbols@0.47.3: {}
 
   mdast-util-to-hast@13.2.1:
     dependencies:

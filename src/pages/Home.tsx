@@ -13,7 +13,7 @@ export default function Home() {
         title="QP UX Architecture"
         actions={<WuButton variant="primary">Get started</WuButton>}
       />
-      <div className="mx-auto w-full max-w-5xl space-y-6 px-6 py-6">
+      <div className="mx-auto w-full max-w-5xl space-y-6 p-8">
         <WuText size="md" className="text-[var(--wu-color-gray-subtle)]">
           Reusable UX foundation powered by WickUI + Tailwind CSS · React 19 + Vite + Redux Toolkit
         </WuText>
