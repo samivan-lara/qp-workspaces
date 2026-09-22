@@ -60,7 +60,7 @@ const ActionsCell = () => (
     >
       <WuMenuItem onClick={() => console.log('rename')}>Rename</WuMenuItem>
       <WuMenuItem
-        className="text-[var(--wu-error-fg,var(--wu-color-red-600,#d92d20))]"
+        style={{ color: 'var(--wu-error-fg,var(--wu-color-red-600,#d92d20))' }}
         onClick={() => console.log('delete')}
       >
         Delete

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { WuButton, WuCard, WuInput, WuTab } from '@npm-questionpro/wick-ui-lib';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { Chip } from '@/components/common/Chip';
+import { DropdownMenu } from '@/components/common/DropdownMenu';
 
 type WorkspaceItem = {
   id: string;
@@ -66,6 +67,7 @@ const randFor = (seed: string, max = 99) => {
 };
 
 function WorkspaceCard({ item }: { item: WorkspaceItem }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <WuCard
       rounded
@@ -76,16 +78,37 @@ function WorkspaceCard({ item }: { item: WorkspaceItem }) {
             <span className="truncate text-[18px] font-medium leading-[32px] text-[#3A424C]">
               {item.name}
             </span>
-            <button
-              type="button"
-              aria-label={`Menu for ${item.name}`}
-              title="Workspace menu"
-              className="flex h-8 w-8 shrink-0 flex-col items-center justify-center gap-0.5 rounded bg-white opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 hover:bg-[rgba(0,0,0,0.04)]"
-            >
-              <span className="h-1 w-1 rounded-full bg-[#3A424C]" aria-hidden="true" />
-              <span className="h-1 w-1 rounded-full bg-[#3A424C]" aria-hidden="true" />
-              <span className="h-1 w-1 rounded-full bg-[#3A424C]" aria-hidden="true" />
-            </button>
+            <DropdownMenu
+              open={menuOpen}
+              onOpenChange={setMenuOpen}
+              Trigger={
+                <button
+                  type="button"
+                  aria-label={`Menu for ${item.name}`}
+                  title="Workspace menu"
+                  className={[
+                    'flex h-8 w-8 shrink-0 flex-col items-center justify-center gap-0.5 rounded transition-opacity',
+                    menuOpen
+                      ? 'bg-[rgba(27,135,230,0.15)] opacity-100'
+                      : 'bg-white opacity-0 group-hover:opacity-100 focus-within:opacity-100 hover:bg-[rgba(0,0,0,0.04)]',
+                  ].join(' ')}
+                >
+                  <span className="h-1 w-1 rounded-full bg-[#3A424C]" aria-hidden="true" />
+                  <span className="h-1 w-1 rounded-full bg-[#3A424C]" aria-hidden="true" />
+                  <span className="h-1 w-1 rounded-full bg-[#3A424C]" aria-hidden="true" />
+                </button>
+              }
+              options={[
+                { label: 'Rename', icon: 'wm-edit' },
+                { label: 'Duplicate', icon: 'wm-content-copy' },
+                {
+                  label: 'Delete',
+                  icon: 'wm-delete',
+                  color: '#cc0000',
+                  separatorBefore: true,
+                },
+              ]}
+            />
           </div>
           <p className="line-clamp-3 text-[12px] font-normal leading-[150%] text-[#3A424C]">
             {item.description}

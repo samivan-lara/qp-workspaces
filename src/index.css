@@ -36,6 +36,47 @@ body {
   border-block-end: none !important;
 }
 
+/* Keśab dropdown menu (WuMenu) — container 8px radius, 1px #F0F8FF inner stroke, 4px padding all around */
+[id^='wu-menu-portal-'] [data-animation='dropdown'] {
+  border: 1px solid #f0f8ff;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+/* Menu item: 32px height, 16px icon + label, 8px gap, Fira Sans Regular 12px/16px #3A424C */
+[id^='wu-menu-portal-'] [data-slot='wu-menu-item'] {
+  height: 32px;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #3a424c;
+  border-radius: 4px;
+}
+
+/* Option hover: fill #EEEEEE */
+[id^='wu-menu-portal-'] [data-slot='wu-menu-item']:hover,
+[id^='wu-menu-portal-'] [data-slot='wu-menu-item'][data-highlighted] {
+  background-color: #eeeeee;
+}
+
+/* Spacer: 1px line inside a container with 4px top/bottom and 8px left/right padding */
+[id^='wu-menu-portal-'] [data-slot='wu-menu-separator-item'] {
+  position: relative;
+  height: auto;
+  padding-block: 4px;
+  padding-inline: 8px;
+  margin: 0;
+  background-color: transparent;
+}
+
+[id^='wu-menu-portal-'] [data-slot='wu-menu-separator-item']::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background-color: var(--wu-muted);
+}
+
 /* Fix workspace avatar alignment — center 20px avatar within 32px button and prevent clipping */
 .workspace-item {
   margin-bottom: 32px;
