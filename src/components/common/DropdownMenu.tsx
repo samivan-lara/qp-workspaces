@@ -6,6 +6,10 @@ export type DropdownMenuOption = {
   label: ReactNode;
   /** Wick icon class, e.g. 'wm-edit', 'wm-content-copy', 'wm-delete'. Rendered at 16x16px. */
   icon?: string;
+  /** Material Symbols icon name (e.g. 'keep'), rendered at 16px. Alternative to `icon`. */
+  materialIcon?: string;
+  /** Renders the Material Symbols icon with a filled style (FILL axis = 1). @default false */
+  filled?: boolean;
   /** Icon + label color override (e.g. '#cc0000' for destructive options). */
   color?: string;
   /** Render the 1px spacer above this option. */
@@ -42,11 +46,21 @@ export function DropdownMenu({ Trigger, options, width = '160px', open, onOpenCh
           {option.separatorBefore ? <WuMenuSeparatorItem /> : null}
           <WuMenuItem
             Icon={
-              option.icon ? (
-                <span
-                  className={`${option.icon} flex h-4 w-4 items-center justify-center text-[16px] leading-none`}
-                  aria-hidden="true"
-                />
+              option.icon || option.materialIcon ? (
+                option.materialIcon ? (
+                  <span
+                    className="material-symbols-outlined flex h-4 w-4 items-center justify-center text-[16px] leading-none"
+                    style={option.filled ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                    aria-hidden="true"
+                  >
+                    {option.materialIcon}
+                  </span>
+                ) : (
+                  <span
+                    className={`${option.icon} flex h-4 w-4 items-center justify-center text-[16px] leading-none`}
+                    aria-hidden="true"
+                  />
+                )
               ) : undefined
             }
             style={option.color ? { color: option.color } : undefined}

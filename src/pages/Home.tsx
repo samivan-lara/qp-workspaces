@@ -5,12 +5,13 @@ import { SectionHeader } from '@/components/common/SectionHeader';
 
 export default function Home() {
   const count = useAppSelector(s => s.counter.value);
+  const selectedName = useAppSelector(s => s.workspace.selectedName);
   const dispatch = useAppDispatch();
 
   return (
     <div className="flex flex-col">
       <SectionHeader
-        title="QP UX Architecture"
+        title={selectedName ?? 'QP UX Architecture'}
         actions={<WuButton variant="primary">Get started</WuButton>}
       />
       <div className="mx-auto w-full max-w-5xl space-y-6 p-8">

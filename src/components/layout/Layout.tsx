@@ -10,8 +10,19 @@ import {
   WuSidebarGroup,
   WuSidebarItem,
   WuSidebarMenu,
+  WuToast,
 } from '@npm-questionpro/wick-ui-lib';
 import { LabSettingsPanel } from '../lab/LabSettingsPanel';
+import { useAppSelector } from '@/store/hooks';
+
+const pageLabel = (path: string) => {
+  if (path === '/workspace') return 'Workspaces';
+  if (path === '/livepolls') return 'LivePolls';
+  if (path === '/archive') return 'Archive';
+  if (path === '/settings') return 'Settings';
+  if (path === '/about') return 'About';
+  return 'Home';
+};
 
 const categories = [
   {
@@ -35,6 +46,7 @@ const navItems = [
 
 export function Layout() {
   const location = useLocation();
+  const selectedName = useAppSelector(s => s.workspace.selectedName);
   const [labOpen, setLabOpen] = useState<boolean>(() => {
     try {
       return localStorage.getItem('lab-settings-open') === '1';
@@ -63,6 +75,7 @@ export function Layout() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
+      <WuToast />
       <WuAppHeader
         productName="LivePolls"
         categories={categories}
@@ -74,7 +87,21 @@ export function Layout() {
           },
         }}
         onLogout={() => console.log('logout')}
-      />
+      >
+        {selectedName && location.pathname !== '/workspace' ? (
+          <div className="wu-flex wu-items-center wu-justify-between wu-w-full">
+            <nav className="wu-breadcrumb-nav" aria-label="Breadcrumb">
+              <Link to="/workspace" className="wu-breadcrumb-link">
+                <span className="block max-w-[150px] truncate">Workspaces</span>
+              </Link>
+              <span className="wm-arrow-forward-ios wu-breadcrumb-separator" aria-hidden="true" />
+              <span className="wu-breadcrumb-page">
+                <span className="block max-w-[250px] truncate">{pageLabel(location.pathname)}</span>
+              </span>
+            </nav>
+          </div>
+        ) : null}
+      </WuAppHeader>
 
       {/* Sidebar + content row: sidebar and footer live at the same visual level (footer is inside the inset beside the sidebar, not full-width below it) */}
       <div className="flex flex-1 min-h-0">

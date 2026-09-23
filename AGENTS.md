@@ -4,7 +4,9 @@
 
 Whenever a dropdown menu is requested, ALWAYS use the `DropdownMenu` component
 (`src/components/common/DropdownMenu.tsx`) — options are config-driven
-(`{ label, icon, color?, separatorBefore?, onClick? }`). The styling lives in
+(`{ label, icon?, materialIcon?, color?, separatorBefore?, onClick? }`).
+Use `icon` for wick icons (e.g. 'wm-edit') and `materialIcon` for Material
+Symbols names (e.g. 'keep'). The styling lives in
 `src/index.css`, scoped to `[id^='wu-menu-portal-']`, so every WuMenu in the app
 gets the same format.
 
