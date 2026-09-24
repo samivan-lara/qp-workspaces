@@ -44,6 +44,7 @@ const randFor = (seed: string, max = 99) => {
 function WorkspaceCard({
   item,
   pinned,
+  livePollCount,
   onRename,
   onPin,
   onDelete,
@@ -51,6 +52,7 @@ function WorkspaceCard({
 }: {
   item: WorkspaceItem;
   pinned: boolean;
+  livePollCount: number;
   onRename: (name: string) => void;
   onPin: () => void;
   onDelete: () => void;
@@ -99,14 +101,14 @@ function WorkspaceCard({
         onOpen();
       }}
       className={[
-        'group flex border p-5',
+        'group flex w-full border p-4',
         menuOpen
           ? 'border-[#3E67D0] shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]'
           : 'border-[#B8C9EF] hover:border-[#3E67D0] hover:shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]',
       ].join(' ')}>
-      <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex h-[102px] min-w-0 flex-col gap-2">
-          <div className="flex min-w-0 items-start justify-between gap-2">
+      <div className="flex min-w-0 w-full flex-col gap-4">
+        <div className="flex h-[102px] min-w-0 w-full flex-col gap-2">
+          <div className="flex min-w-0 w-full items-start justify-between gap-2">
             {editing ? (
               <input
                 autoFocus
@@ -185,7 +187,7 @@ function WorkspaceCard({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Chip icon="wc-quiz" value={randFor(`${item.id}-polls`)} label="LivePolls" />
+          <Chip icon="wc-quiz" value={livePollCount} label="LivePolls" />
           <Chip icon="wm-group" value={randFor(`${item.id}-members`)} label="Members" />
         </div>
       </div>
@@ -235,6 +237,7 @@ export default function Workspace() {
   const myWorkspaces = useAppSelector(s => s.workspace.myWorkspaces);
   const sharedWorkspaces = useAppSelector(s => s.workspace.sharedWorkspaces);
   const pinnedIds = useAppSelector(s => s.workspace.pinnedIds);
+  const dashboards = useAppSelector(s => s.workspace.dashboardByWorkspace);
 
   const openCreate = () => {
     setNameDraft('');
@@ -346,6 +349,7 @@ export default function Workspace() {
                           key={item.id}
                           item={item}
                           pinned={item.id === pinnedIds[activeTab]}
+                          livePollCount={dashboards[item.id]?.livePollRows.length ?? 0}
                           onOpen={() => openWorkspace(item.name)}
                           onRename={name => renameItem(activeTab, item.id, name)}
                           onPin={() => pinItem(activeTab, item.id)}

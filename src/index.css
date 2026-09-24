@@ -77,6 +77,104 @@ body {
   background-color: var(--wu-muted);
 }
 
+/* Lab variant 1 — sidebar workspace switcher dropdown */
+
+/* Switcher popup stroke: light blue #8DC3F2 (switcher only) */
+[id^='wu-menu-portal-'] [data-animation='dropdown']:has(.ws-swt-see-all) {
+  border-color: #8dc3f2;
+}
+
+[id^='wu-menu-portal-'] [data-slot='wu-menu-item'].ws-swt-item,
+[id^='wu-menu-portal-'] [data-slot='wu-menu-item'].ws-swt-see-all {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* Workspace option containers: Fira Sans Regular 14px/20, #3A424C */
+[id^='wu-menu-portal-'] [data-slot='wu-menu-item'].ws-swt-item {
+  font-family: 'Fira Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: #3a424c;
+}
+
+/* Labeled group separator: label text at left, flex line at right, 8px gap.
+   Row stretches full width (flex:1) so the ::after line fills the remaining space. */
+[id^='wu-menu-portal-'] [data-slot='wu-menu-item-group-label']:has(.ws-swt-group-label) {
+  display: flex;
+  align-items: center;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+}
+
+[id^='wu-menu-portal-'] .ws-swt-group-label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
+  padding: 8px 8px 4px;
+  color: #545e6b;
+  font-family: 'Fira Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+/* 4px gap between switcher components (workspace groups, separator) */
+[id^='wu-menu-portal-'] .ws-swt-group + * {
+  margin-top: 4px;
+}
+
+/* Variant 2 header: 32px container, Fira Sans Medium 14px/20 #3A424C */
+[id^='wu-menu-portal-'] .ws-swt-v2-header {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 8px;
+  color: #3a424c;
+  font-family: 'Fira Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+[id^='wu-menu-portal-'] .ws-swt-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--wu-muted);
+}
+
+/* Workspace initials box: 20x20, 2px radius, brand navy fill, white letters */
+[id^='wu-menu-portal-'] .ws-swt-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  background-color: #1b327e;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* "See all workspaces" CTA */
+[id^='wu-menu-portal-'] [data-slot='wu-menu-item'].ws-swt-see-all {
+  color: #1b87e6;
+}
+
+/* Switcher trigger open state: fill #1B87E6 at 15% opacity while the menu is open */
+.ws-swt-trigger-open {
+  background-color: rgba(27, 135, 230, 0.15);
+}
+
 /* Fix workspace avatar alignment — center 20px avatar within 32px button and prevent clipping */
 .workspace-item {
   margin-bottom: 32px;
@@ -123,4 +221,57 @@ body {
 /* Nudge avatar to perfect center (was 2px right / 1px up vs Home icon) */
 .workspace-item span[style*='20px'] {
   transform: translateY(0.5px) !important;
+}
+/* Home landing animations (gentle, run on mount) */
+@keyframes lpSoftRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lpBarGrow {
+  from {
+    transform: scaleY(0.18);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes lpBarWiden {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.home-rise {
+  animation: lpSoftRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-chart-bar {
+  transform-origin: bottom;
+  animation: lpBarGrow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+.home-rank-bar {
+  transform-origin: left;
+  animation: lpBarWiden 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-rise,
+  .home-chart-bar,
+  .home-rank-bar {
+    animation: none;
+  }
 }

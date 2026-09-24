@@ -13,6 +13,7 @@ import {
   WuToast,
 } from '@npm-questionpro/wick-ui-lib';
 import { LabSettingsPanel } from '../lab/LabSettingsPanel';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { useAppSelector } from '@/store/hooks';
 
 const pageLabel = (path: string) => {
@@ -73,6 +74,22 @@ export function Layout() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [labOpen]);
 
+  const [switcherVariant, setSwitcherVariant] = useState<1 | 2>(() => {
+    try {
+      return localStorage.getItem('lab-switcher-variant') === '1' ? 1 : 2;
+    } catch {
+      return 2;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('lab-switcher-variant', String(switcherVariant));
+    } catch {
+      // ignore
+    }
+  }, [switcherVariant]);
+
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       <WuToast />
@@ -112,12 +129,19 @@ export function Layout() {
               <WuSidebarContent>
                 <div className="wu-flex wu-flex-col wu-gap-1">
                   <WuSidebarMenu className="workspace-item">
-                    <WuSidebarItem
-                      Icon={<span className="material-symbols-outlined">workspaces</span>}
-                      isActive={location.pathname === '/workspace'}
-                    >
-                      <Link to="/workspace">Workspace</Link>
-                    </WuSidebarItem>
+                    {location.pathname !== '/workspace' ? (
+                      <WorkspaceSwitcher
+                        variant={switcherVariant}
+                        active={location.pathname === '/workspace'}
+                      />
+                    ) : (
+                      <WuSidebarItem
+                        Icon={<span className="material-symbols-outlined">workspaces</span>}
+                        isActive={location.pathname === '/workspace'}
+                      >
+                        <Link to="/workspace">Workspace</Link>
+                      </WuSidebarItem>
+                    )}
                   </WuSidebarMenu>
 
                   <WuSidebarMenu>
@@ -183,7 +207,7 @@ export function Layout() {
 
             <WuFooter>
               <div className="flex w-full items-center justify-between gap-2">
-                <span>LivePolls · Information architecture © {new Date().getFullYear()}</span>
+                <span>Workspaces project © 2026</span>
                 <WuButton
                   iconOnly
                   size="sm"
@@ -202,7 +226,12 @@ export function Layout() {
             </WuFooter>
           </div>
         </WuSidebar>
-        <LabSettingsPanel open={labOpen} onClose={() => setLabOpen(false)} />
+        <LabSettingsPanel
+          open={labOpen}
+          onClose={() => setLabOpen(false)}
+          switcherVariant={switcherVariant}
+          onSwitcherVariantChange={setSwitcherVariant}
+        />
       </div>
     </div>
   );

@@ -3,9 +3,16 @@ import './LabSettingsPanel.css';
 interface LabSettingsPanelProps {
   open: boolean;
   onClose: () => void;
+  switcherVariant: 1 | 2;
+  onSwitcherVariantChange: (variant: 1 | 2) => void;
 }
 
-export function LabSettingsPanel({ open, onClose }: LabSettingsPanelProps) {
+export function LabSettingsPanel({
+  open,
+  onClose,
+  switcherVariant,
+  onSwitcherVariantChange,
+}: LabSettingsPanelProps) {
   return (
     <aside
       id="labSettingsPanel"
@@ -37,6 +44,18 @@ export function LabSettingsPanel({ open, onClose }: LabSettingsPanelProps) {
         <div className="lab-settings-panel__control-row">
           <span className="lab-settings-panel__control-label">Groups: Collapsed</span>
           <input type="checkbox" className="lab-settings-toggle" aria-label="Toggle groups" />
+        </div>
+        <div className="lab-settings-panel__control-row">
+          <span className="lab-settings-panel__control-label">
+            Workspace switcher · Variant {switcherVariant}
+          </span>
+          <input
+            type="checkbox"
+            className="lab-settings-toggle"
+            checked={switcherVariant === 1}
+            onChange={(e) => onSwitcherVariantChange(e.target.checked ? 1 : 2)}
+            aria-label="Workspace switcher variant"
+          />
         </div>
       </div>
 

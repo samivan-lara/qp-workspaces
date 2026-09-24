@@ -1,23 +1,8 @@
 import { WuButton, WuTable, WuMenu, WuMenuItem } from '@npm-questionpro/wick-ui-lib';
 import { SectionHeader } from '@/components/common/SectionHeader';
+import { useAppSelector } from '@/store/hooks';
+import type { LivePollRow } from '@/store/slices/workspaceSlice';
 import { formatDate } from '@/utils/format';
-
-type LivePoll = {
-  id: string;
-  name: string;
-  createdAt: string;
-  sessions: number;
-  questions: number;
-};
-
-const livePolls: LivePoll[] = [
-  { id: 'lp-1', name: 'Coffee Break Preferences', createdAt: '2026-08-02T10:00:00Z', sessions: 12, questions: 8 },
-  { id: 'lp-2', name: 'Team Spirit Check-in', createdAt: '2026-08-11T14:30:00Z', sessions: 7, questions: 5 },
-  { id: 'lp-3', name: 'Product Feedback Pulse', createdAt: '2026-08-19T09:15:00Z', sessions: 21, questions: 12 },
-  { id: 'lp-4', name: 'Slack Etiquette 101', createdAt: '2026-08-27T16:45:00Z', sessions: 4, questions: 6 },
-  { id: 'lp-5', name: 'Lunch Menu Vote', createdAt: '2026-09-03T12:00:00Z', sessions: 18, questions: 3 },
-  { id: 'lp-6', name: 'Friday Retro Questions', createdAt: '2026-09-12T10:20:00Z', sessions: 9, questions: 10 },
-];
 
 const ActionsCell = () => (
   <div className="row-actions flex w-[168px] items-center justify-end gap-1">
@@ -70,6 +55,12 @@ const ActionsCell = () => (
 );
 
 export default function LivePolls() {
+  const dashboard = useAppSelector(s => {
+    const id = s.workspace.selectedId ?? s.workspace.myWorkspaces[0]?.id ?? null;
+    return id ? s.workspace.dashboardByWorkspace[id] : undefined;
+  });
+  const rows: LivePollRow[] = dashboard?.livePollRows ?? [];
+
   return (
     <div className="flex flex-col">
       <SectionHeader title="LivePolls" actions={<WuButton variant="primary">New poll</WuButton>} />
@@ -93,7 +84,7 @@ export default function LivePolls() {
               { accessorKey: 'questions', header: 'Questions' },
               { accessorKey: 'id', header: '', enableSorting: false, cell: () => <ActionsCell /> },
             ]}
-            data={livePolls}
+            data={rows}
           />
         </div>
       </div>
