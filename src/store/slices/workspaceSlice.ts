@@ -62,6 +62,7 @@ export type DashboardData = {
 interface WorkspaceState {
   selectedName: string | null;
   selectedId: string | null;
+  recentWorkspaceNames: string[];
   myWorkspaces: WorkspaceItem[];
   sharedWorkspaces: WorkspaceItem[];
   pinnedIds: Record<WorkspaceTab, string | null>;
@@ -307,6 +308,7 @@ const allSeedIds = [...initialMyWorkspaces, ...initialSharedWorkspaces].map(w =>
 const initialState: WorkspaceState = {
   selectedName: null,
   selectedId: null,
+  recentWorkspaceNames: initialMyWorkspaces[0] ? [initialMyWorkspaces[0].name] : [],
   myWorkspaces: initialMyWorkspaces,
   sharedWorkspaces: initialSharedWorkspaces,
   pinnedIds: { mine: null, shared: null },
@@ -322,6 +324,10 @@ const workspaceSlice = createSlice({
     selectWorkspace: (state, action: PayloadAction<string>) => {
       const name = action.payload;
       state.selectedName = name;
+      state.recentWorkspaceNames = [
+        name,
+        ...state.recentWorkspaceNames.filter(n => n !== name),
+      ].slice(0, 3);
       const item = [...state.myWorkspaces, ...state.sharedWorkspaces].find(w => w.name === name);
       state.selectedId = item?.id ?? null;
     },
@@ -332,7 +338,10 @@ const workspaceSlice = createSlice({
     renameWorkspace: (state, action: PayloadAction<{ tab: WorkspaceTab; id: string; name: string }>) => {
       const list = action.payload.tab === 'mine' ? state.myWorkspaces : state.sharedWorkspaces;
       const item = list.find(i => i.id === action.payload.id);
-      if (item) item.name = action.payload.name;
+      if (item) {
+        item.name = action.payload.name;
+        if (state.selectedId === action.payload.id) state.selectedName = action.payload.name;
+      }
     },
     togglePinWorkspace: (state, action: PayloadAction<{ tab: WorkspaceTab; id: string }>) => {
       const { tab, id } = action.payload;
@@ -350,6 +359,7 @@ const workspaceSlice = createSlice({
     },
     deleteWorkspace: (state, action: PayloadAction<{ tab: WorkspaceTab; id: string }>) => {
       const { tab, id } = action.payload;
+      const removed = [...state.myWorkspaces, ...state.sharedWorkspaces].find(i => i.id === id);
       if (tab === 'mine') {
         state.myWorkspaces = state.myWorkspaces.filter(i => i.id !== id);
       } else {
@@ -357,6 +367,9 @@ const workspaceSlice = createSlice({
       }
       if (state.pinnedIds[tab] === id) state.pinnedIds[tab] = null;
       delete state.dashboardByWorkspace[id];
+      if (removed) {
+        state.recentWorkspaceNames = state.recentWorkspaceNames.filter(n => n !== removed.name);
+      }
       if (state.selectedId === id) {
         state.selectedId = null;
         state.selectedName = null;

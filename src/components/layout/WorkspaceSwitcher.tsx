@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   WuMenu,
@@ -27,19 +27,66 @@ export function WorkspaceSwitcher({ active, variant = 1 }: WorkspaceSwitcherProp
   const myWorkspaces = useAppSelector(s => s.workspace.myWorkspaces);
   const sharedWorkspaces = useAppSelector(s => s.workspace.sharedWorkspaces);
   const selectedName = useAppSelector(s => s.workspace.selectedName);
+  const recentWorkspaceNames = useAppSelector(s => s.workspace.recentWorkspaceNames);
+  const liRef = useRef<HTMLLIElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const cancelClose = () => {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+    };
+    const maybeClose = () => {
+      if (closeTimerRef.current === null) {
+        closeTimerRef.current = window.setTimeout(() => {
+          closeTimerRef.current = null;
+          setOpen(false);
+        }, 150);
+      }
+    };
+    const onMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const inTrigger = !!liRef.current?.contains(target);
+      const inPopup = !!target.closest?.('[class*="_wuMenuPopup"]');
+      if (inTrigger || inPopup) cancelClose();
+      else maybeClose();
+    };
+    document.addEventListener('mouseover', onMouseOver);
+    return () => {
+      document.removeEventListener('mouseover', onMouseOver);
+      if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+    };
+  }, [open]);
+
+  const close = () => setOpen(false);
 
   const latestShared =
     sharedWorkspaces.find(w => w.name === selectedName) ?? sharedWorkspaces[0] ?? null;
 
-  const v2Options: WorkspaceItem[] = [...myWorkspaces.slice(0, 3), ...(latestShared ? [latestShared] : [])];
+  const allWorkspaces = [...myWorkspaces, ...sharedWorkspaces];
+  const currentName = recentWorkspaceNames[0] ?? myWorkspaces[0]?.name ?? 'Workspaces';
+
+  const preferredNames = recentWorkspaceNames.filter(n => n !== currentName);
+  const fallbackNames = allWorkspaces
+    .map(w => w.name)
+    .filter(n => n !== currentName && !preferredNames.includes(n));
+  const optionWorkspaces: WorkspaceItem[] = [...preferredNames, ...fallbackNames]
+    .map(name => allWorkspaces.find(w => w.name === name))
+    .filter((w): w is WorkspaceItem => !!w)
+    .slice(0, 3);
 
   const openWorkspace = (name: string) => {
+    close();
     dispatch(selectWorkspace(name));
     navigate('/');
   };
 
   return (
     <li
+      ref={liRef}
       data-sidebar="menu-item"
       className="wu-group/menu-item wu-relative wu-flex wu-items-center wu-gap-2 wu-px-2"
     >
@@ -54,6 +101,14 @@ export function WorkspaceSwitcher({ active, variant = 1 }: WorkspaceSwitcherProp
             data-sidebar="menu-button"
             data-size="default"
             data-active={active}
+            onMouseEnter={() => {
+              if (closeTimerRef.current !== null) {
+                window.clearTimeout(closeTimerRef.current);
+                closeTimerRef.current = null;
+              }
+              setOpen(true);
+            }}
+            onClick={() => navigate('/workspace')}
             className={`ws-swt-trigger wu-peer/menu-button wu-flex wu-w-full wu-items-center wu-gap-2 wu-overflow-hidden wu-rounded-md wu-p-2 wu-text-left wu-text-sm wu-outline-none wu-transition-[width,height,padding] focus-visible:wu-ring-2 wu-h-8 wu-cursor-pointer wu-text-blue-q hover:wu-bg-blue-sidebarHover group-data-[collapsible=icon]:!wu-size-8 group-data-[collapsible=icon]:!wu-p-2${open ? ' ws-swt-trigger-open' : ''}`}
           >
             <div className="wu-flex wu-w-full wu-items-center wu-overflow-hidden wu-text-base wu-truncate wu-text-ellipsis">
@@ -102,9 +157,9 @@ export function WorkspaceSwitcher({ active, variant = 1 }: WorkspaceSwitcherProp
           </>
         ) : (
           <>
-            <div className="ws-swt-v2-header">Workspaces</div>
+            <div className="ws-swt-v2-header">{currentName}</div>
             <WuMenuSeparatorItem />
-            {v2Options.map(item => (
+            {optionWorkspaces.map(item => (
               <WuMenuItem key={item.id} className="ws-swt-item" onClick={() => openWorkspace(item.name)}>
                 <span className="min-w-0 truncate">{item.name}</span>
               </WuMenuItem>
@@ -112,7 +167,13 @@ export function WorkspaceSwitcher({ active, variant = 1 }: WorkspaceSwitcherProp
           </>
         )}
         <WuMenuSeparatorItem />
-        <WuMenuItem className="ws-swt-see-all" onClick={() => navigate('/workspace')}>
+        <WuMenuItem
+          className="ws-swt-see-all"
+          onClick={() => {
+            close();
+            navigate('/workspace');
+          }}
+        >
           See all workspaces
         </WuMenuItem>
       </WuMenu>

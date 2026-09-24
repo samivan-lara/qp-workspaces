@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   WuButton,
@@ -63,9 +63,21 @@ function WorkspaceCard({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [draft, setDraft] = useState(item.name);
   const cancelledRef = useRef(false);
+  const dblRef = useRef<number | null>(null);
   const { showToast } = useWuShowToast();
 
+  useEffect(
+    () => () => {
+      if (dblRef.current !== null) window.clearTimeout(dblRef.current);
+    },
+    [],
+  );
+
   const startRename = () => {
+    if (dblRef.current !== null) {
+      window.clearTimeout(dblRef.current);
+      dblRef.current = null;
+    }
     setDraft(item.name);
     setEditing(true);
   };
@@ -98,6 +110,19 @@ function WorkspaceCard({
         const inTrigger = target.closest?.('button[title="Workspace menu"]');
         const inModal = target.closest?.('[role="dialog"], [data-wu-overlay]');
         if (inMenu || inTrigger || inModal) return;
+        const onName = !!target.closest?.('[data-rename]');
+        if (onName) {
+          if (dblRef.current !== null) {
+            window.clearTimeout(dblRef.current);
+            dblRef.current = null;
+            return;
+          }
+          dblRef.current = window.setTimeout(() => {
+            dblRef.current = null;
+            onOpen();
+          }, 250);
+          return;
+        }
         onOpen();
       }}
       className={[
@@ -135,7 +160,15 @@ function WorkspaceCard({
                       keep
                     </span>
                   ) : null}
-                  <span className="min-w-0 truncate text-[18px] font-medium leading-[32px] text-[#3A424C]">
+                  <span
+                    data-rename
+                    title="Double-click to rename"
+                    className="min-w-0 cursor-text truncate text-[18px] font-medium leading-[32px] text-[#3A424C]"
+                    onDoubleClick={e => {
+                      e.stopPropagation();
+                      startRename();
+                    }}
+                  >
                     {item.name}
                   </span>
                 </span>

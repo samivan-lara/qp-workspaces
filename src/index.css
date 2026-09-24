@@ -129,13 +129,13 @@ body {
   margin-top: 4px;
 }
 
-/* Variant 2 header: 32px container, Fira Sans Medium 14px/20 #3A424C */
+/* Variant 2 header: 32px container, Fira Sans Medium 14px/20 #1B3380 */
 [id^='wu-menu-portal-'] .ws-swt-v2-header {
   display: flex;
   align-items: center;
   height: 32px;
   padding: 0 8px;
-  color: #3a424c;
+  color: #1b3380;
   font-family: 'Fira Sans', sans-serif;
   font-size: 14px;
   font-weight: 500;
