@@ -105,11 +105,13 @@ export function Layout() {
         }}
         onLogout={() => console.log('logout')}
       >
-        {selectedName && location.pathname !== '/workspace' ? (
+        {location.pathname !== '/workspace' ? (
           <div className="wu-flex wu-items-center wu-justify-between wu-w-full">
             <nav className="wu-breadcrumb-nav" aria-label="Breadcrumb">
               <Link to="/workspace" className="wu-breadcrumb-link">
-                <span className="block max-w-[150px] truncate">Workspaces</span>
+                <span className="block max-w-[150px] truncate">
+                  {selectedName ?? 'Workspaces'}
+                </span>
               </Link>
               <span className="wm-arrow-forward-ios wu-breadcrumb-separator" aria-hidden="true" />
               <span className="wu-breadcrumb-page">
@@ -123,7 +125,7 @@ export function Layout() {
       {/* Sidebar + content row: sidebar and footer live at the same visual level (footer is inside the inset beside the sidebar, not full-width below it) */}
       <div className="flex flex-1 min-h-0">
         <WuSidebar
-          defaultOpen
+          defaultOpen={false}
           Sidebar={
             <>
               <WuSidebarContent>

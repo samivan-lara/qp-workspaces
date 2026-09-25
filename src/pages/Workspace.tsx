@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   WuButton,
@@ -21,8 +21,8 @@ import {
   addWorkspace,
   deleteWorkspace,
   renameWorkspace,
+  reorderWorkspace,
   selectWorkspace,
-  togglePinWorkspace,
   type WorkspaceItem,
   type WorkspaceTab,
 } from '@/store/slices/workspaceSlice';
@@ -43,20 +43,24 @@ const randFor = (seed: string, max = 99) => {
 
 function WorkspaceCard({
   item,
-  pinned,
   livePollCount,
+  isDragSource,
+  shift,
   onRename,
-  onPin,
   onDelete,
   onOpen,
+  onDragStart,
+  onDragEnd,
 }: {
   item: WorkspaceItem;
-  pinned: boolean;
   livePollCount: number;
+  isDragSource: boolean;
+  shift: string | undefined;
   onRename: (name: string) => void;
-  onPin: () => void;
   onDelete: () => void;
   onOpen: () => void;
+  onDragStart: (id: string) => void;
+  onDragEnd: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -74,10 +78,6 @@ function WorkspaceCard({
   );
 
   const startRename = () => {
-    if (dblRef.current !== null) {
-      window.clearTimeout(dblRef.current);
-      dblRef.current = null;
-    }
     setDraft(item.name);
     setEditing(true);
   };
@@ -103,8 +103,9 @@ function WorkspaceCard({
   return (
     <WuCard
       rounded
+      data-workspace-card
       onClick={e => {
-        if (editing) return;
+        if (editing || isDragSource) return;
         const target = e.target as HTMLElement;
         const inMenu = target.closest?.('[id^="wu-menu-portal-"]');
         const inTrigger = target.closest?.('button[title="Workspace menu"]');
@@ -125,11 +126,36 @@ function WorkspaceCard({
         }
         onOpen();
       }}
+      draggable={!editing}
+      onDragStart={e => {
+        const t = e.target as HTMLElement;
+        if (t.closest?.('input, button[title="Workspace menu"]')) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.effectAllowed = 'move';
+        const img = new Image();
+        img.src =
+          'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+        e.dataTransfer.setDragImage(img, 0, 0);
+        onDragStart(item.id);
+      }}
+      onDragEnd={e => {
+        e.stopPropagation();
+        onDragEnd();
+      }}
+      style={{
+        transform: shift ?? 'none',
+        opacity: isDragSource ? 0 : 1,
+        transition: 'transform 260ms cubic-bezier(0.2, 0.6, 0.2, 1)',
+      }}
       className={[
-        'group flex w-full border p-4',
-        menuOpen
-          ? 'border-[#3E67D0] shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]'
-          : 'border-[#B8C9EF] hover:border-[#3E67D0] hover:shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]',
+        'group flex w-full border p-4 transition-all duration-150',
+        isDragSource
+          ? '!bg-white !border-[#3E67D0] !shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]'
+          : menuOpen
+            ? '!border-[#3E67D0] !shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]'
+            : 'bg-white border-[#B8C9EF] hover:border-[#3E67D0] hover:shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]',
       ].join(' ')}>
       <div className="flex min-w-0 w-full flex-col gap-4">
         <div className="flex h-[102px] min-w-0 w-full flex-col gap-2">
@@ -151,15 +177,25 @@ function WorkspaceCard({
             ) : (
               <>
                 <span className="flex min-w-0 flex-1 items-center gap-2">
-                  {pinned ? (
+                  <span
+                    className={[
+                      'h-7 w-0 shrink-0 overflow-hidden transition-[width] duration-[220ms] ease-in-out',
+                      isDragSource ? 'w-7' : 'group-hover:w-7',
+                    ].join(' ')}
+                  >
                     <span
-                      className="material-symbols-outlined flex h-5 w-5 shrink-0 items-center justify-center text-[20px] leading-none"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
+                      title="Drag to reorder"
                       aria-hidden="true"
+                      className={[
+                        'material-symbols-outlined flex h-7 w-7 cursor-grab select-none items-center justify-center rounded text-[20px] text-[#3A424C] hover:bg-black/5 active:cursor-grabbing',
+                        isDragSource
+                          ? 'opacity-100 transition-opacity duration-[220ms] ease-in-out'
+                          : 'opacity-0 transition-opacity duration-[220ms] ease-in-out group-hover:opacity-100',
+                      ].join(' ')}
                     >
-                      keep
+                      drag_indicator
                     </span>
-                  ) : null}
+                  </span>
                   <span
                     data-rename
                     title="Double-click to rename"
@@ -196,12 +232,6 @@ function WorkspaceCard({
                   options={[
                     { label: 'Rename', icon: 'wm-edit', onClick: startRename },
                     { label: 'Add member', icon: 'wm-person-add' },
-                    {
-                      label: pinned ? 'Unpin top view' : 'Pin top view',
-                      materialIcon: pinned ? 'keep_off' : 'keep',
-                      filled: true,
-                      onClick: onPin,
-                    },
                     {
                       label: 'Delete',
                       icon: 'wm-delete',
@@ -269,7 +299,6 @@ export default function Workspace() {
   const { showToast } = useWuShowToast();
   const myWorkspaces = useAppSelector(s => s.workspace.myWorkspaces);
   const sharedWorkspaces = useAppSelector(s => s.workspace.sharedWorkspaces);
-  const pinnedIds = useAppSelector(s => s.workspace.pinnedIds);
   const dashboards = useAppSelector(s => s.workspace.dashboardByWorkspace);
 
   const openCreate = () => {
@@ -302,10 +331,7 @@ export default function Workspace() {
   const sourceFor = (tab: TabValue) => (tab === 'mine' ? myWorkspaces : sharedWorkspaces);
   const filteredFor = (tab: TabValue) => {
     const q = query.trim().toLowerCase();
-    const list = sourceFor(tab).filter(item => item.name.toLowerCase().includes(q));
-    const pinned = list.filter(item => item.id === pinnedIds[tab]);
-    const rest = list.filter(item => item.id !== pinnedIds[tab]);
-    return [...pinned, ...rest];
+    return sourceFor(tab).filter(item => item.name.toLowerCase().includes(q));
   };
 
   const renameItem = (tab: TabValue, id: string, name: string) => {
@@ -316,9 +342,124 @@ export default function Workspace() {
     dispatch(deleteWorkspace({ tab, id }));
   };
 
-  const pinItem = (tab: TabValue, id: string) => {
-    dispatch(togglePinWorkspace({ tab, id }));
+  const moveItem = (tab: TabValue, fromId: string, toId: string) => {
+    dispatch(reorderWorkspace({ tab, fromId, toId }));
   };
+
+  const [dragState, setDragState] = useState<{ id: string; overIndex: number | null } | null>(null);
+  const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null);
+  const geoRef = useRef({ w: 0, h: 0, cardW: 0, cardH: 0, radius: 0 });
+  const gridRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!dragState) return;
+    const onDrag = (e: globalThis.DragEvent) => {
+      if (e.clientX || e.clientY) setGhostPos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('dragover', onDrag);
+    return () => window.removeEventListener('dragover', onDrag);
+  }, [dragState]);
+
+  const beginDrag = (id: string) => {
+    const els = gridRef.current ? Array.from(gridRef.current.children).filter(el => el.hasAttribute('data-workspace-card')) : [];
+    const rects = els.map(el => el.getBoundingClientRect());
+    let w = 0;
+    let h = 0;
+    for (let i = 1; i < rects.length; i += 1) {
+      if (Math.abs(rects[i].top - rects[0].top) < 2) {
+        w = rects[i].left - rects[0].left;
+        break;
+      }
+    }
+    for (let i = 1; i < rects.length; i += 1) {
+      if (rects[i].top - rects[0].top > 2) {
+        h = rects[i].top - rects[0].top;
+        break;
+      }
+    }
+    const cardH = rects[0]?.height ?? 176;
+    if (!h) h = cardH + 16;
+    const radius = els[0] ? parseFloat(getComputedStyle(els[0]).borderTopLeftRadius) || 8 : 8;
+    geoRef.current = { w, h, cardW: rects[0]?.width ?? 0, cardH, radius };
+    setDragState({ id, overIndex: null });
+  };
+
+  const endDrag = () => {
+    setDragState(null);
+    setGhostPos(null);
+  };
+
+  const setOverIndex = (boundary: number) =>
+    setDragState(s => (s && s.overIndex !== boundary ? { ...s, overIndex: boundary } : s));
+
+  const boundaryAt = (clientX: number, clientY: number) => {
+    const rect = gridRef.current?.getBoundingClientRect();
+    const { w, h } = geoRef.current;
+    if (!rect || !w || !h) return null;
+    const fx = (clientX - rect.left) / w;
+    const fy = (clientY - rect.top) / h;
+    const n = gridList.length;
+    return Math.max(0, Math.min(n, Math.round(fy * rowCount + fx)));
+  };
+
+  const dropAt = (boundary: number) => {
+    if (!dragState) return;
+    const s = gridList.findIndex(x => x.id === dragState.id);
+    if (s === -1) return;
+    let final = s;
+    if (boundary < s) final = boundary;
+    else if (boundary > s + 1) final = boundary - 1;
+    if (final !== s) moveItem(activeTab, dragState.id, gridList[final].id);
+    setDragState(null);
+  };
+
+  const rowCount = 3;
+  const gridList = filteredFor(activeTab);
+  const transforms: Record<string, string> = {};
+  if (dragState) {
+    const s = gridList.findIndex(x => x.id === dragState.id);
+    const p = dragState.overIndex;
+    if (s !== -1 && p != null) {
+      const { w, h } = geoRef.current;
+      const gs = (i: number) => ({ r: Math.floor(i / rowCount), c: i % rowCount });
+      if (p < s) {
+        for (let i = p; i < s; i += 1) {
+          const cur = gs(i);
+          const next = gs(i + 1);
+          transforms[gridList[i].id] = `translate(${(next.c - cur.c) * w}px, ${(next.r - cur.r) * h}px)`;
+        }
+      } else if (p > s + 1) {
+        for (let i = s + 1; i <= p - 1; i += 1) {
+          const cur = gs(i);
+          const prev = gs(i - 1);
+          transforms[gridList[i].id] = `translate(${(prev.c - cur.c) * w}px, ${(prev.r - cur.r) * h}px)`;
+        }
+      }
+    }
+  }
+
+  const slotStyle: CSSProperties | undefined = (() => {
+    const s = dragState ? gridList.findIndex(x => x.id === dragState.id) : -1;
+    const p = dragState?.overIndex;
+    if (s === -1 || p == null) return undefined;
+    let final = s;
+    if (p < s) final = p;
+    else if (p > s + 1) final = p - 1;
+    if (final === s) return undefined;
+    const { w, h, cardW, cardH, radius } = geoRef.current;
+    if (!w || !h || !cardW || !cardH) return undefined;
+    const c = final % rowCount;
+    const r = Math.floor(final / rowCount);
+    return {
+      left: c * w,
+      top: r * h,
+      width: cardW,
+      height: cardH,
+      borderRadius: radius,
+      transition:
+        'left 260ms cubic-bezier(0.2, 0.6, 0.2, 1), top 260ms cubic-bezier(0.2, 0.6, 0.2, 1)',
+    };
+  })();
 
   return (
     <div className="flex flex-col">
@@ -376,19 +517,88 @@ export default function Workspace() {
                 ),
                 Content: (
                   <div className="pt-6">
-                    <div className="grid grid-cols-3 gap-4">
-                      {filtered.map(item => (
-                        <WorkspaceCard
-                          key={item.id}
-                          item={item}
-                          pinned={item.id === pinnedIds[activeTab]}
-                          livePollCount={dashboards[item.id]?.livePollRows.length ?? 0}
-                          onOpen={() => openWorkspace(item.name)}
-                          onRename={name => renameItem(activeTab, item.id, name)}
-                          onPin={() => pinItem(activeTab, item.id)}
-                          onDelete={() => removeItem(activeTab, item.id)}
+                    <div
+                      ref={gridRef}
+                      className="relative grid grid-cols-3 gap-4"
+                      onDragOver={e => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        const p = boundaryAt(e.clientX, e.clientY);
+                        if (p != null) setOverIndex(p);
+                      }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        const p = boundaryAt(e.clientX, e.clientY);
+                        if (p != null) dropAt(p);
+                      }}
+                      onDragLeave={e => {
+                        const next = e.relatedTarget as Node | null;
+                        if (gridRef.current && !gridRef.current.contains(next)) {
+                          setDragState(s => (s ? { ...s, overIndex: null } : s));
+                        }
+                      }}
+                    >
+                      {slotStyle ? (
+                        <div
+                          className="pointer-events-none absolute bg-[#DDEBF7]/50"
+                          style={slotStyle}
                         />
-                      ))}
+                      ) : null}
+                      {dragState && ghostPos
+                        ? (() => {
+                            const gi = gridList.find(x => x.id === dragState.id);
+                            if (!gi) return null;
+                            const { cardW, cardH, radius } = geoRef.current;
+                            return (
+                              <div
+                                className="pointer-events-none fixed flex flex-col justify-between border border-[#3E67D0] bg-white shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]"
+                                style={{
+                                  left: ghostPos.x - cardW / 2,
+                                  top: ghostPos.y - cardH / 2,
+                                  width: cardW,
+                                  height: cardH,
+                                  borderRadius: radius,
+                                  zIndex: 50,
+                                }}
+                              >
+                                <div className="flex flex-col gap-2 p-4">
+                                  <span className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[rgba(27,135,230,0.15)] text-[20px] text-[#3A424C]">
+                                      drag_indicator
+                                    </span>
+                                    <span className="truncate text-[18px] font-medium leading-[32px] text-[#3A424C]">
+                                      {gi.name}
+                                    </span>
+                                  </span>
+                                  <p className="line-clamp-3 text-[12px] font-normal leading-[150%] text-[#3A424C]">
+                                    {gi.description}
+                                  </p>
+                                </div>
+                                <div className="flex flex-wrap gap-2 px-4 pb-4">
+                                  <Chip icon="wc-quiz" value={1} label="LivePolls" />
+                                  <Chip icon="wm-group" value={1} label="Members" />
+                                </div>
+                              </div>
+                            );
+                          })()
+                        : null}
+                      {filtered.map(item => {
+                        const isDragSource = dragState?.id === item.id;
+                        return (
+                          <WorkspaceCard
+                            key={item.id}
+                            item={item}
+                            livePollCount={dashboards[item.id]?.livePollRows.length ?? 0}
+                            isDragSource={isDragSource}
+                            shift={transforms[item.id]}
+                            onOpen={() => openWorkspace(item.name)}
+                            onRename={name => renameItem(activeTab, item.id, name)}
+                            onDelete={() => removeItem(activeTab, item.id)}
+                            onDragStart={beginDrag}
+                            onDragEnd={endDrag}
+                          />
+                        );
+                      })}
                     </div>
 
                     {filtered.length === 0 ? (

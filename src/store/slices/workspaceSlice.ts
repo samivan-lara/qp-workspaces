@@ -65,7 +65,6 @@ interface WorkspaceState {
   recentWorkspaceNames: string[];
   myWorkspaces: WorkspaceItem[];
   sharedWorkspaces: WorkspaceItem[];
-  pinnedIds: Record<WorkspaceTab, string | null>;
   dashboardByWorkspace: Record<string, DashboardData>;
 }
 
@@ -311,7 +310,6 @@ const initialState: WorkspaceState = {
   recentWorkspaceNames: initialMyWorkspaces[0] ? [initialMyWorkspaces[0].name] : [],
   myWorkspaces: initialMyWorkspaces,
   sharedWorkspaces: initialSharedWorkspaces,
-  pinnedIds: { mine: null, shared: null },
   dashboardByWorkspace: Object.fromEntries(
     allSeedIds.map((id, i) => [id, buildDashboard(id, i, i)]),
   ),
@@ -343,9 +341,17 @@ const workspaceSlice = createSlice({
         if (state.selectedId === action.payload.id) state.selectedName = action.payload.name;
       }
     },
-    togglePinWorkspace: (state, action: PayloadAction<{ tab: WorkspaceTab; id: string }>) => {
-      const { tab, id } = action.payload;
-      state.pinnedIds[tab] = state.pinnedIds[tab] === id ? null : id;
+    reorderWorkspace: (
+      state,
+      action: PayloadAction<{ tab: WorkspaceTab; fromId: string; toId: string }>,
+    ) => {
+      const { tab, fromId, toId } = action.payload;
+      const list = tab === 'mine' ? state.myWorkspaces : state.sharedWorkspaces;
+      const from = list.findIndex(i => i.id === fromId);
+      const to = list.findIndex(i => i.id === toId);
+      if (from === -1 || to === -1 || from === to) return;
+      const [moved] = list.splice(from, 1);
+      list.splice(to, 0, moved);
     },
     addWorkspace: (state, action: PayloadAction<{ name: string; description: string }>) => {
       const id = `w-${Date.now()}`;
@@ -365,7 +371,6 @@ const workspaceSlice = createSlice({
       } else {
         state.sharedWorkspaces = state.sharedWorkspaces.filter(i => i.id !== id);
       }
-      if (state.pinnedIds[tab] === id) state.pinnedIds[tab] = null;
       delete state.dashboardByWorkspace[id];
       if (removed) {
         state.recentWorkspaceNames = state.recentWorkspaceNames.filter(n => n !== removed.name);
@@ -382,8 +387,8 @@ export const {
   selectWorkspace,
   clearWorkspace,
   renameWorkspace,
-  togglePinWorkspace,
   addWorkspace,
   deleteWorkspace,
+  reorderWorkspace,
 } = workspaceSlice.actions;
 export default workspaceSlice.reducer;
