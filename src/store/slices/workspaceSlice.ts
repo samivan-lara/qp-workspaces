@@ -305,8 +305,8 @@ const analytics: DashboardData['analytics'] = {
 const allSeedIds = [...initialMyWorkspaces, ...initialSharedWorkspaces].map(w => w.id);
 
 const initialState: WorkspaceState = {
-  selectedName: null,
-  selectedId: null,
+  selectedName: initialMyWorkspaces[0]?.name ?? null,
+  selectedId: initialMyWorkspaces[0]?.id ?? null,
   recentWorkspaceNames: initialMyWorkspaces[0] ? [initialMyWorkspaces[0].name] : [],
   myWorkspaces: initialMyWorkspaces,
   sharedWorkspaces: initialSharedWorkspaces,
