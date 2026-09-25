@@ -622,14 +622,21 @@ export default function Workspace() {
         </div>
       </div>
 
-      <WuModal open={createOpen} onOpenChange={setCreateOpen} variant="action" maxWidth="494px">
+      <WuModal
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          variant="action"
+          maxWidth="494px"
+          preventClickOutside
+        >
         <WuModalHeader>New workspace</WuModalHeader>
-        <WuModalContent>
+        <WuModalContent style={{ gap: 20 }}>
           <WuFormGroup
             Label={
-              <>
-                Workspace name <span className="text-[var(--wu-color-red-deep)]">*</span>
-              </>
+              <span>
+                Workspace name{' '}
+                <span className="text-[var(--wu-color-red-deep)]">*</span>
+              </span>
             }
             Error={nameError}
             Input={
@@ -646,14 +653,22 @@ export default function Workspace() {
             }
           />
           <div>
-            <span className="mb-1 block text-sm font-medium text-[#3A424C]">
-              Description <span className="font-normal text-[var(--wu-color-gray-subtle)]">(Optional)</span>
+            <span className="mb-1 block text-sm font-normal leading-[21px] text-[#545E6B]">
+              Description
             </span>
             <WuTextarea
               value={descDraft}
               onChange={e => setDescDraft(e.target.value)}
               placeholder="What is this workspace for?"
               aria-label="Workspace description"
+              style={{
+                height: 64,
+                maxHeight: 64,
+                resize: 'none',
+                fontSize: 12,
+                lineHeight: '16px',
+                borderRadius: '4px 4px 0 0',
+              }}
             />
           </div>
         </WuModalContent>
