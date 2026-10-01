@@ -21,9 +21,13 @@ export type LivePollSession = {
 
 export type ActivityItem = {
   id: string;
-  title: string;
+  description: string;
   detail: string;
   time: string;
+  date: string;
+  userName: string;
+  userInitials: string;
+  tags: string[];
 };
 
 export type LivePollRow = {
@@ -253,33 +257,49 @@ const buildDashboard = (workspaceId: string, seedIndex: number, nowIndex: number
   const activity: ActivityItem[] = [
     {
       id: `${workspaceId}-act-1`,
-      title: live
-        ? `Ran live: “${live.title}”`
-        : `Scheduled “${sessions[0].title}”`,
+      description: live
+        ? `ran live “${live.title}”`
+        : `scheduled “${sessions[0].title}”`,
       detail: live
         ? `${live.participants} players · ${live.questions} questions`
         : `${sessions[0].questions} questions`,
       time: '2h ago',
+      date: 'Today',
+      userName: 'You',
+      userInitials: 'YO',
+      tags: seed.type === 'This or That' || seed.type === 'Poll' ? [seed.type] : ['LivePolls'],
     },
     {
       id: `${workspaceId}-act-2`,
-      title: `Created “${sessions[1].title}”`,
+      description: `created “${sessions[1].title}”`,
       detail: `${sessions[1].questions} questions ready to play`,
       time: 'Yesterday',
+      date: 'Yesterday',
+      userName: 'You',
+      userInitials: 'YO',
+      tags: ['Draft'],
     },
     {
       id: `${workspaceId}-act-3`,
-      title: live
-        ? `Shared analytics for “${live.title}”`
-        : `Reviewed feedback on “${sessions[0].title}”`,
+      description: live
+        ? `shared analytics for “${live.title}”`
+        : `reviewed feedback on “${sessions[0].title}”`,
       detail: '85% completion',
       time: '3 days ago',
+      date: 'This week',
+      userName: 'Sofia',
+      userInitials: 'SO',
+      tags: ['Analytics'],
     },
     {
       id: `${workspaceId}-act-4`,
-      title: `Duplicated “${sessions[2].title}”`,
+      description: `duplicated “${sessions[2].title}”`,
       detail: 'New draft created from template',
       time: 'Last week',
+      date: 'Last week',
+      userName: 'You',
+      userInitials: 'YO',
+      tags: ['Template'],
     },
   ];
 

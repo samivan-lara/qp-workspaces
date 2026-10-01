@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { WuButton } from '@npm-questionpro/wick-ui-lib';
+import { WuActivityLog, WuButton } from '@npm-questionpro/wick-ui-lib';
 import { useAppSelector } from '@/store/hooks';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import type {
@@ -115,22 +115,16 @@ function SessionsPanel({ sessions }: { sessions: LivePollSession[] }) {
   );
 }
 
-function ActivityRow({ item }: { item: ActivityItem }) {
-  return (
-    <li className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F2F7FF] text-[#1B87E6]">
-        <span className="wm-play-circle" aria-hidden="true" style={{ fontSize: 14 }} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium text-[#3A424C]">{item.title}</p>
-        {item.detail ? <p className="truncate text-[12px] text-[#9B9B9B]">{item.detail}</p> : null}
-      </div>
-      <span className="shrink-0 text-[12px] text-[#9B9B9B]">{item.time}</span>
-    </li>
-  );
-}
-
 function ActivityPanel({ items }: { items: ActivityItem[] }) {
+  const accessorKey = {
+    id: 'id',
+    date: 'date',
+    time: 'time',
+    userName: 'userName',
+    userInitials: 'userInitials',
+    tags: 'tags',
+    description: 'description',
+  };
   return (
     <section
       aria-label="Recent activity"
@@ -139,11 +133,9 @@ function ActivityPanel({ items }: { items: ActivityItem[] }) {
     >
       <div className="flex h-full flex-col rounded-lg bg-white p-5">
         <h3 className="text-[15px] font-medium text-[#545E6B]">Recent activity</h3>
-        <ul className="mt-3 divide-y divide-[rgba(27,51,128,0.08)]">
-          {items.map(item => (
-            <ActivityRow key={item.id} item={item} />
-          ))}
-        </ul>
+        <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
+          <WuActivityLog logs={items} accessorKey={accessorKey} />
+        </div>
       </div>
     </section>
   );
