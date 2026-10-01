@@ -16,6 +16,9 @@ import {
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { Chip } from '@/components/common/Chip';
 import { DropdownMenu } from '@/components/common/DropdownMenu';
+import { useLabDragVariant } from '@/components/lab/useLabDragVariant';
+import { useLabNewWorkspaceVariant } from '@/components/lab/useLabNewWorkspaceVariant';
+import type { LabDragVariant } from '@/components/lab/labContext';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   addWorkspace,
@@ -45,6 +48,7 @@ function WorkspaceCard({
   item,
   livePollCount,
   isDragSource,
+  variant,
   shift,
   onRename,
   onDelete,
@@ -55,6 +59,7 @@ function WorkspaceCard({
   item: WorkspaceItem;
   livePollCount: number;
   isDragSource: boolean;
+  variant: LabDragVariant;
   shift: string | undefined;
   onRename: (name: string) => void;
   onDelete: () => void;
@@ -66,13 +71,52 @@ function WorkspaceCard({
   const [editing, setEditing] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [draft, setDraft] = useState(item.name);
+  const [hintOpen, setHintOpen] = useState(false);
+  const [cursorRel, setCursorRel] = useState<{ x: number; y: number } | null>(null);
   const cancelledRef = useRef(false);
   const dblRef = useRef<number | null>(null);
+  const hintTimerRef = useRef<number | null>(null);
+  const lastMoveRef = useRef<{ x: number; y: number } | null>(null);
   const { showToast } = useWuShowToast();
+
+  const clearHintTimer = () => {
+    if (hintTimerRef.current !== null) {
+      window.clearTimeout(hintTimerRef.current);
+      hintTimerRef.current = null;
+    }
+  };
+
+  const armHint = () => {
+    clearHintTimer();
+    hintTimerRef.current = window.setTimeout(() => setHintOpen(true), 3000);
+  };
+
+  const onCardMouseEnter = () => {
+    if (editing || variant !== 1) return;
+    lastMoveRef.current = null;
+    armHint();
+  };
+
+  const onCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (variant !== 1) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCursorRel({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    if (hintOpen) setHintOpen(false);
+    const p = lastMoveRef.current;
+    lastMoveRef.current = { x: e.clientX, y: e.clientY };
+    if (!p || Math.hypot(e.clientX - p.x, e.clientY - p.y) > 4) armHint();
+  };
+
+  const onCardMouseLeave = () => {
+    clearHintTimer();
+    setHintOpen(false);
+    lastMoveRef.current = null;
+  };
 
   useEffect(
     () => () => {
       if (dblRef.current !== null) window.clearTimeout(dblRef.current);
+      clearHintTimer();
     },
     [],
   );
@@ -104,6 +148,9 @@ function WorkspaceCard({
     <WuCard
       rounded
       data-workspace-card
+      onMouseEnter={onCardMouseEnter}
+      onMouseMove={onCardMouseMove}
+      onMouseLeave={onCardMouseLeave}
       onClick={e => {
         if (editing || isDragSource) return;
         const target = e.target as HTMLElement;
@@ -150,7 +197,8 @@ function WorkspaceCard({
         transition: 'transform 260ms cubic-bezier(0.2, 0.6, 0.2, 1)',
       }}
       className={[
-        'group flex w-full border p-4 transition-all duration-150',
+        'group relative flex w-full border p-4 transition-all duration-150',
+        variant === 1 && !editing ? 'cursor-pointer' : '',
         isDragSource
           ? '!bg-white !border-[#3E67D0] !shadow-[inset_0_0_0_1px_#3E67D0,-2px_3px_3px_-1px_rgba(0,15,64,0.17)]'
           : menuOpen
@@ -177,25 +225,27 @@ function WorkspaceCard({
             ) : (
               <>
                 <span className="flex min-w-0 flex-1 items-center gap-2">
-                  <span
-                    className={[
-                      'h-7 w-0 shrink-0 overflow-hidden transition-[width] duration-[220ms] ease-in-out',
-                      isDragSource ? 'w-7' : 'group-hover:w-7',
-                    ].join(' ')}
-                  >
+                  {variant === 2 ? (
                     <span
-                      title="Drag to reorder"
-                      aria-hidden="true"
                       className={[
-                        'material-symbols-outlined flex h-7 w-7 cursor-grab select-none items-center justify-center rounded text-[20px] text-[#3A424C] hover:bg-black/5 active:cursor-grabbing',
-                        isDragSource
-                          ? 'opacity-100 transition-opacity duration-[220ms] ease-in-out'
-                          : 'opacity-0 transition-opacity duration-[220ms] ease-in-out group-hover:opacity-100',
+                        'h-7 w-0 shrink-0 overflow-hidden transition-[width] duration-[220ms] ease-in-out',
+                        isDragSource ? 'w-7' : 'group-hover:w-7',
                       ].join(' ')}
                     >
-                      drag_indicator
+                      <span
+                        title="Drag to reorder"
+                        aria-hidden="true"
+                        className={[
+                          'material-symbols-outlined flex h-7 w-7 cursor-grab select-none items-center justify-center rounded text-[20px] text-[#3A424C] hover:bg-black/5 active:cursor-grabbing',
+                          isDragSource
+                            ? 'opacity-100 transition-opacity duration-[220ms] ease-in-out'
+                            : 'opacity-0 transition-opacity duration-[220ms] ease-in-out group-hover:opacity-100',
+                        ].join(' ')}
+                      >
+                        drag_indicator
+                      </span>
                     </span>
-                  </span>
+                  ) : null}
                   <span
                     data-rename
                     title="Double-click to rename"
@@ -283,6 +333,33 @@ function WorkspaceCard({
           </WuButton>
         </WuModalFooter>
       </WuModal>
+
+      {variant === 1 && hintOpen && !editing && !isDragSource && cursorRel ? (
+        <div
+          className="pointer-events-none absolute z-30"
+          style={{
+            left: cursorRel.x,
+            top: cursorRel.y - 2,
+            transform: 'translateY(-100%)',
+            backgroundColor: '#555555',
+            borderRadius: 4,
+            padding: 8,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Fira Sans', system-ui, sans-serif",
+              fontWeight: 400,
+              fontSize: 12,
+              lineHeight: '16px',
+              color: '#FFFFFF',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Hold and drag to reorder workspace card
+          </span>
+        </div>
+      ) : null}
     </WuCard>
   );
 }
@@ -300,6 +377,12 @@ export default function Workspace() {
   const myWorkspaces = useAppSelector(s => s.workspace.myWorkspaces);
   const sharedWorkspaces = useAppSelector(s => s.workspace.sharedWorkspaces);
   const dashboards = useAppSelector(s => s.workspace.dashboardByWorkspace);
+
+  const createDefaultWorkspace = () => {
+    dispatch(addWorkspace({ name: 'New Workspace', description: '' }));
+    openWorkspace('New Workspace');
+    showToast({ message: 'The Workspace created successfully', variant: 'success' });
+  };
 
   const openCreate = () => {
     setNameDraft('');
@@ -350,6 +433,8 @@ export default function Workspace() {
   const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null);
   const geoRef = useRef({ w: 0, h: 0, cardW: 0, cardH: 0, radius: 0 });
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const dragVariant = useLabDragVariant();
+  const newWorkspaceVariant = useLabNewWorkspaceVariant();
 
   useEffect(() => {
     if (!dragState) return;
@@ -392,6 +477,9 @@ export default function Workspace() {
   const setOverIndex = (boundary: number) =>
     setDragState(s => (s && s.overIndex !== boundary ? { ...s, overIndex: boundary } : s));
 
+  const rowCount = 3;
+  const gs = (i: number) => ({ r: Math.floor(i / rowCount), c: i % rowCount });
+
   const boundaryAt = (clientX: number, clientY: number) => {
     const rect = gridRef.current?.getBoundingClientRect();
     const { w, h } = geoRef.current;
@@ -402,34 +490,54 @@ export default function Workspace() {
     return Math.max(0, Math.min(n, Math.round(fy * rowCount + fx)));
   };
 
+  const idxFor = (r: number, c: number) => r * rowCount + c;
+
+  const targetIndexAt = (clientX: number, clientY: number) => {
+    const rect = gridRef.current?.getBoundingClientRect();
+    const { w, h } = geoRef.current;
+    if (!rect || !w || !h) return null;
+    const fx = (clientX - rect.left) / w;
+    const fy = (clientY - rect.top) / h;
+    const n = gridList.length;
+    const c = Math.max(0, Math.min(rowCount - 1, Math.floor(fx * rowCount)));
+    const rows = Math.ceil(n / rowCount);
+    const r = Math.max(0, Math.min(rows - 1, Math.floor(fy * rows)));
+    return Math.min(idxFor(r, c), n - 1);
+  };
+
   const dropAt = (boundary: number) => {
     if (!dragState) return;
     const s = gridList.findIndex(x => x.id === dragState.id);
     if (s === -1) return;
-    let final = s;
-    if (boundary < s) final = boundary;
-    else if (boundary > s + 1) final = boundary - 1;
-    if (final !== s) moveItem(activeTab, dragState.id, gridList[final].id);
+    if (dragVariant === 1) {
+      const t = Math.min(Math.max(0, boundary), gridList.length - 1);
+      if (t !== s) moveItem(activeTab, dragState.id, gridList[t].id);
+    } else {
+      let final = s;
+      if (boundary < s) final = boundary;
+      else if (boundary > s + 1) final = boundary - 1;
+      if (final !== s) moveItem(activeTab, dragState.id, gridList[final].id);
+    }
     setDragState(null);
   };
 
-  const rowCount = 3;
   const gridList = filteredFor(activeTab);
   const transforms: Record<string, string> = {};
   if (dragState) {
     const s = gridList.findIndex(x => x.id === dragState.id);
     const p = dragState.overIndex;
     if (s !== -1 && p != null) {
+      const boundary =
+        dragVariant === 1 ? (p <= s ? p : Math.min(p + 1, gridList.length)) : p;
       const { w, h } = geoRef.current;
-      const gs = (i: number) => ({ r: Math.floor(i / rowCount), c: i % rowCount });
-      if (p < s) {
-        for (let i = p; i < s; i += 1) {
+      if (boundary < s) {
+        for (let i = boundary; i < s; i += 1) {
           const cur = gs(i);
           const next = gs(i + 1);
           transforms[gridList[i].id] = `translate(${(next.c - cur.c) * w}px, ${(next.r - cur.r) * h}px)`;
         }
-      } else if (p > s + 1) {
-        for (let i = s + 1; i <= p - 1; i += 1) {
+      } else if (boundary > s + 1) {
+        for (let i = s + 1; i <= boundary - 1; i += 1) {
           const cur = gs(i);
           const prev = gs(i - 1);
           transforms[gridList[i].id] = `translate(${(prev.c - cur.c) * w}px, ${(prev.r - cur.r) * h}px)`;
@@ -443,8 +551,13 @@ export default function Workspace() {
     const p = dragState?.overIndex;
     if (s === -1 || p == null) return undefined;
     let final = s;
-    if (p < s) final = p;
-    else if (p > s + 1) final = p - 1;
+    if (dragVariant === 1) {
+      final = Math.max(0, Math.min(gridList.length - 1, p));
+    } else if (p < s) {
+      final = p;
+    } else if (p > s + 1) {
+      final = p - 1;
+    }
     if (final === s) return undefined;
     const { w, h, cardW, cardH, radius } = geoRef.current;
     if (!w || !h || !cardW || !cardH) return undefined;
@@ -466,7 +579,10 @@ export default function Workspace() {
       <SectionHeader
         title="My workspaces"
         actions={
-          <WuButton variant="primary" onClick={openCreate}>
+          <WuButton
+            variant="primary"
+            onClick={newWorkspaceVariant === 2 ? createDefaultWorkspace : openCreate}
+          >
             + New workspace
           </WuButton>
         }
@@ -519,16 +635,23 @@ export default function Workspace() {
                   <div className="pt-6">
                     <div
                       ref={gridRef}
+                      data-drag-variant={dragVariant}
                       className="relative grid grid-cols-3 gap-4"
                       onDragOver={e => {
                         e.preventDefault();
                         e.dataTransfer.dropEffect = 'move';
-                        const p = boundaryAt(e.clientX, e.clientY);
+                        const p =
+                          dragVariant === 1
+                            ? targetIndexAt(e.clientX, e.clientY)
+                            : boundaryAt(e.clientX, e.clientY);
                         if (p != null) setOverIndex(p);
                       }}
                       onDrop={e => {
                         e.preventDefault();
-                        const p = boundaryAt(e.clientX, e.clientY);
+                        const p =
+                          dragVariant === 1
+                            ? targetIndexAt(e.clientX, e.clientY)
+                            : boundaryAt(e.clientX, e.clientY);
                         if (p != null) dropAt(p);
                       }}
                       onDragLeave={e => {
@@ -563,9 +686,11 @@ export default function Workspace() {
                               >
                                 <div className="flex flex-col gap-2 p-4">
                                   <span className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[rgba(27,135,230,0.15)] text-[20px] text-[#3A424C]">
-                                      drag_indicator
-                                    </span>
+                                    {dragVariant === 2 ? (
+                                      <span className="material-symbols-outlined flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[rgba(27,135,230,0.15)] text-[20px] text-[#3A424C]">
+                                        drag_indicator
+                                      </span>
+                                    ) : null}
                                     <span className="truncate text-[18px] font-medium leading-[32px] text-[#3A424C]">
                                       {gi.name}
                                     </span>
@@ -590,6 +715,7 @@ export default function Workspace() {
                             item={item}
                             livePollCount={dashboards[item.id]?.livePollRows.length ?? 0}
                             isDragSource={isDragSource}
+                            variant={dragVariant}
                             shift={transforms[item.id]}
                             onOpen={() => openWorkspace(item.name)}
                             onRename={name => renameItem(activeTab, item.id, name)}

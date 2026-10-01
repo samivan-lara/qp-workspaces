@@ -5,6 +5,10 @@ interface LabSettingsPanelProps {
   onClose: () => void;
   switcherVariant: 1 | 2;
   onSwitcherVariantChange: (variant: 1 | 2) => void;
+  dragVariant: 1 | 2;
+  onDragVariantChange: (variant: 1 | 2) => void;
+  newWorkspaceVariant: 1 | 2;
+  onNewWorkspaceVariantChange: (variant: 1 | 2) => void;
 }
 
 export function LabSettingsPanel({
@@ -12,6 +16,10 @@ export function LabSettingsPanel({
   onClose,
   switcherVariant,
   onSwitcherVariantChange,
+  dragVariant,
+  onDragVariantChange,
+  newWorkspaceVariant,
+  onNewWorkspaceVariantChange,
 }: LabSettingsPanelProps) {
   return (
     <aside
@@ -55,6 +63,30 @@ export function LabSettingsPanel({
             checked={switcherVariant === 1}
             onChange={(e) => onSwitcherVariantChange(e.target.checked ? 1 : 2)}
             aria-label="Workspace switcher variant"
+          />
+        </div>
+        <div className="lab-settings-panel__control-row">
+          <span className="lab-settings-panel__control-label">
+            Drag variation · Variant {dragVariant}
+          </span>
+          <input
+            type="checkbox"
+            className="lab-settings-toggle"
+            checked={dragVariant === 1}
+            onChange={(e) => onDragVariantChange(e.target.checked ? 1 : 2)}
+            aria-label="Drag variation"
+          />
+        </div>
+        <div className="lab-settings-panel__control-row">
+          <span className="lab-settings-panel__control-label">
+            New Workspaces · Variant {newWorkspaceVariant}
+          </span>
+          <input
+            type="checkbox"
+            className="lab-settings-toggle"
+            checked={newWorkspaceVariant === 1}
+            onChange={(e) => onNewWorkspaceVariantChange(e.target.checked ? 1 : 2)}
+            aria-label="New Workspaces variant"
           />
         </div>
       </div>

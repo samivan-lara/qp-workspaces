@@ -322,6 +322,15 @@ const analytics: DashboardData['analytics'] = {
   };
 };
 
+const emptyDashboard = (): DashboardData => ({
+  sessions: [],
+  activity: [],
+  livePollRows: [],
+  weekly: WEEK_LABELS.map(label => ({ label, value: 0 })),
+  respondents: [],
+  analytics: { sessionsCreated: 0, totalParticipants: 0, totalAnswers: 0, avgScore: '0%' },
+});
+
 const allSeedIds = [...initialMyWorkspaces, ...initialSharedWorkspaces].map(w => w.id);
 
 const initialState: WorkspaceState = {
@@ -373,13 +382,22 @@ const workspaceSlice = createSlice({
       const [moved] = list.splice(from, 1);
       list.splice(to, 0, moved);
     },
-    addWorkspace: (state, action: PayloadAction<{ name: string; description: string }>) => {
+    addWorkspace: (
+      state,
+      action: PayloadAction<{ name: string; description: string }>,
+    ) => {
+      const { name, description } = action.payload;
       const id = `w-${Date.now()}`;
-      state.myWorkspaces.push({
+      state.myWorkspaces.unshift({
         id,
-        name: action.payload.name,
-        description: action.payload.description,
+        name,
+        description,
       });
+      state.dashboardByWorkspace[id] = emptyDashboard();
+    },
+    populateWorkspace: (state, action: PayloadAction<string>) => {
+      const id = action.payload;
+      if (!state.dashboardByWorkspace[id]) return;
       const seedIndex = state.myWorkspaces.length + state.sharedWorkspaces.length;
       state.dashboardByWorkspace[id] = buildDashboard(id, seedIndex, seedIndex);
     },
@@ -410,5 +428,6 @@ export const {
   addWorkspace,
   deleteWorkspace,
   reorderWorkspace,
+  populateWorkspace,
 } = workspaceSlice.actions;
 export default workspaceSlice.reducer;

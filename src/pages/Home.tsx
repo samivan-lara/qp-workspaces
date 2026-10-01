@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { WuActivityLog, WuButton } from '@npm-questionpro/wick-ui-lib';
-import { useAppSelector } from '@/store/hooks';
+import { WuActivityLog, WuButton, WuLoader } from '@npm-questionpro/wick-ui-lib';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { populateWorkspace } from '@/store/slices/workspaceSlice';
+import { useLabNewWorkspaceVariant } from '@/components/lab/useLabNewWorkspaceVariant';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import type {
   ActivityItem,
@@ -246,8 +248,64 @@ function AnalyticsPanel({ dashboard }: { dashboard: DashboardData }) {
   );
 }
 
+function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
+  const dispatch = useAppDispatch();
+  const newWorkspaceVariant = useLabNewWorkspaceVariant();
+  const [creating, setCreating] = useState(false);
+  const createFirstSession = () => {
+    if (!id || creating) return;
+    setCreating(true);
+    window.setTimeout(() => {
+      dispatch(populateWorkspace(id));
+      setCreating(false);
+    }, 1200);
+  };
+  return (
+    <div className="flex min-h-[calc(100vh-250px)] flex-col items-center justify-center px-8">
+      {creating ? (
+        <WuLoader size="md" />
+      ) : (
+        <div className="max-w-[520px] text-center">
+          {newWorkspaceVariant === 1 ? (
+            <>
+              <p className="text-[32px] font-normal leading-[40px] text-[#545E6B]">Welcome to</p>
+              <p className="mt-[2px] text-[48px] font-light leading-[56px] text-[#545E6B]">{name}</p>
+            </>
+          ) : (
+            <p className="text-[48px] font-light leading-[56px] text-[#545E6B]">{name}</p>
+          )}
+          <p className="mt-2 text-[12px] font-normal leading-4 text-[#9B9B9B]">
+            {newWorkspaceVariant === 1
+              ? 'Your workspace for manage Live sessions, create polls and more.'
+              : 'Create and manage Live sessions, share analytics and more.'}
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <WuButton
+              variant="primary"
+              Icon={<span className="wm-add" aria-hidden="true" />}
+              onClick={createFirstSession}
+            >
+              New LivePoll
+            </WuButton>
+            <WuButton
+              variant="outlined"
+              Icon={<span className="wm-person-add" aria-hidden="true" />}
+              onClick={() => console.log('add members')}
+            >
+              Add members
+            </WuButton>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const selectedName = useAppSelector(s => s.workspace.selectedName);
+  const selectedId = useAppSelector(
+    s => s.workspace.selectedId ?? s.workspace.myWorkspaces[0]?.id ?? null,
+  );
   const myWorkspaces = useAppSelector(s => s.workspace.myWorkspaces);
   const dashboard = useAppSelector(s => {
     const id = s.workspace.selectedId ?? s.workspace.myWorkspaces[0]?.id ?? null;
@@ -260,11 +318,15 @@ export default function Home() {
     <div className="flex flex-col">
       <SectionHeader title={title} actions={<WuButton variant="primary">New session</WuButton>} />
       {dashboard ? (
-        <div className="grid grid-cols-1 gap-6 p-8 lg:grid-cols-12">
-          <SessionsPanel sessions={dashboard.sessions} />
-          <ActivityPanel items={dashboard.activity} />
-          <AnalyticsPanel dashboard={dashboard} />
-        </div>
+        dashboard.sessions.length === 0 ? (
+          <EmptyWorkspaceView name={title} id={selectedId} />
+        ) : (
+          <div className="grid grid-cols-1 gap-6 p-8 lg:grid-cols-12">
+            <SessionsPanel sessions={dashboard.sessions} />
+            <ActivityPanel items={dashboard.activity} />
+            <AnalyticsPanel dashboard={dashboard} />
+          </div>
+        )
       ) : (
         <div className="p-8">
           <p className="text-sm text-[#9B9B9B]">No workspace selected.</p>

@@ -13,6 +13,8 @@ import {
   WuToast,
 } from '@npm-questionpro/wick-ui-lib';
 import { LabSettingsPanel } from '../lab/LabSettingsPanel';
+import { LabProvider } from '../lab/LabProvider';
+import type { LabDragVariant, LabNewWorkspaceVariant } from '../lab/labContext';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { useAppSelector } from '@/store/hooks';
 
@@ -90,8 +92,48 @@ export function Layout() {
     }
   }, [switcherVariant]);
 
+  const [dragVariant, setDragVariant] = useState<LabDragVariant>(() => {
+    try {
+      return localStorage.getItem('lab-drag-variant') === '1' ? 1 : 2;
+    } catch {
+      return 2;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('lab-drag-variant', String(dragVariant));
+    } catch {
+      // ignore
+    }
+  }, [dragVariant]);
+
+  const [newWorkspaceVariant, setNewWorkspaceVariant] = useState<LabNewWorkspaceVariant>(() => {
+    try {
+      return localStorage.getItem('lab-new-workspace-variant') === '2' ? 2 : 1;
+    } catch {
+      return 1;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('lab-new-workspace-variant', String(newWorkspaceVariant));
+    } catch {
+      // ignore
+    }
+  }, [newWorkspaceVariant]);
+
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <LabProvider
+      value={{
+        dragVariant,
+        setDragVariant,
+        newWorkspaceVariant,
+        setNewWorkspaceVariant,
+      }}
+    >
+      <div className="flex h-screen flex-col overflow-hidden">
       <WuToast />
       <WuAppHeader
         productName="LivePolls"
@@ -233,8 +275,13 @@ export function Layout() {
           onClose={() => setLabOpen(false)}
           switcherVariant={switcherVariant}
           onSwitcherVariantChange={setSwitcherVariant}
+          dragVariant={dragVariant}
+          onDragVariantChange={setDragVariant}
+          newWorkspaceVariant={newWorkspaceVariant}
+          onNewWorkspaceVariantChange={setNewWorkspaceVariant}
         />
       </div>
-    </div>
+      </div>
+    </LabProvider>
   );
 }
