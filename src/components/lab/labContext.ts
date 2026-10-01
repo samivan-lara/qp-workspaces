@@ -11,7 +11,7 @@ export interface LabContextValue {
   setNewWorkspaceVariant: (variant: LabNewWorkspaceVariant) => void;
 }
 
-export const DEFAULT_DRAG_VARIANT: LabDragVariant = 2;
+export const DEFAULT_DRAG_VARIANT: LabDragVariant = 1;
 
 export const DEFAULT_NEW_WORKSPACE_VARIANT: LabNewWorkspaceVariant = 1;
 

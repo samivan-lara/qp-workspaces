@@ -94,9 +94,9 @@ export function Layout() {
 
   const [dragVariant, setDragVariant] = useState<LabDragVariant>(() => {
     try {
-      return localStorage.getItem('lab-drag-variant') === '1' ? 1 : 2;
+      return localStorage.getItem('lab-drag-variant') === '2' ? 2 : 1;
     } catch {
-      return 2;
+      return 1;
     }
   });
 
