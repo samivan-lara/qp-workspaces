@@ -266,14 +266,7 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
         <WuLoader size="md" />
       ) : (
         <div className="max-w-[520px] text-center">
-          {newWorkspaceVariant === 1 ? (
-            <>
-              <p className="text-[32px] font-normal leading-[40px] text-[#545E6B]">Welcome to</p>
-              <p className="mt-[2px] text-[48px] font-light leading-[56px] text-[#545E6B]">{name}</p>
-            </>
-          ) : (
-            <p className="text-[48px] font-light leading-[56px] text-[#545E6B]">{name}</p>
-          )}
+          <p className="text-[48px] font-light leading-[56px] text-[#545E6B]">{name}</p>
           <p className="mt-2 text-[12px] font-normal leading-4 text-[#9B9B9B]">
             {newWorkspaceVariant === 1
               ? 'Your workspace for manage Live sessions, create polls and more.'
