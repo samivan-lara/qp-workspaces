@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { WuActivityLog, WuButton, WuLoader } from '@npm-questionpro/wick-ui-lib';
+import { WuActivityLog, WuButton, WuLoader, useWuShowToast } from '@npm-questionpro/wick-ui-lib';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { populateWorkspace } from '@/store/slices/workspaceSlice';
+import { populateWorkspace, renameWorkspace } from '@/store/slices/workspaceSlice';
 import { useLabNewWorkspaceVariant } from '@/components/lab/useLabNewWorkspaceVariant';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import type {
@@ -250,8 +250,11 @@ function AnalyticsPanel({ dashboard }: { dashboard: DashboardData }) {
 
 function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
   const dispatch = useAppDispatch();
+  const { showToast } = useWuShowToast();
   const newWorkspaceVariant = useLabNewWorkspaceVariant();
   const [creating, setCreating] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [draft, setDraft] = useState('');
   const createFirstSession = () => {
     if (!id || creating) return;
     setCreating(true);
@@ -260,14 +263,55 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
       setCreating(false);
     }, 1200);
   };
+  const startRename = () => {
+    setDraft(name);
+    setRenaming(true);
+  };
+  const commitRename = () => {
+    const next = draft.trim() || name;
+    if (id && next !== name) {
+      dispatch(renameWorkspace({ tab: 'mine', id, name: next }));
+      showToast({ message: 'The Workspace name change successfully', variant: 'success' });
+    }
+    setRenaming(false);
+  };
   return (
     <div className="flex min-h-[calc(100vh-250px)] flex-col items-center justify-center px-8">
       {creating ? (
         <WuLoader size="md" />
       ) : (
         <div className="max-w-[520px] text-center">
-          <p className="text-[48px] font-light leading-[56px] text-[#545E6B]">{name}</p>
-          <p className="mt-2 text-[12px] font-normal leading-4 text-[#9B9B9B]">
+          {newWorkspaceVariant === 2 && renaming ? (
+            <input
+              autoFocus
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onFocus={e => e.target.select()}
+              onBlur={commitRename}
+              onKeyDown={e => {
+                if (e.key === 'Enter') commitRename();
+                if (e.key === 'Escape') setRenaming(false);
+              }}
+              aria-label="New workspace name"
+              className="w-full border-0 border-b-2 border-b-[#1B87E6] bg-transparent text-center text-[48px] font-light leading-[56px] text-[#545E6B] outline-none"
+            />
+          ) : (
+            <p
+              className="text-[48px] font-light leading-[56px] text-[#545E6B]"
+              title={newWorkspaceVariant === 2 ? 'Double-click to rename' : undefined}
+              onDoubleClick={
+                newWorkspaceVariant === 2
+                  ? e => {
+                      e.stopPropagation();
+                      startRename();
+                    }
+                  : undefined
+              }
+            >
+              {name}
+            </p>
+          )}
+          <p className="mt-2 text-[16px] font-normal leading-6 text-[#9B9B9B]">
             {newWorkspaceVariant === 1
               ? 'Your workspace for manage Live sessions, create polls and more.'
               : 'Create and manage Live sessions, share analytics and more.'}
