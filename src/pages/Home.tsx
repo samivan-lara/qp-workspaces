@@ -253,8 +253,10 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
   const { showToast } = useWuShowToast();
   const newWorkspaceVariant = useLabNewWorkspaceVariant();
   const [creating, setCreating] = useState(false);
+  const [renaming, setRenaming] = useState(newWorkspaceVariant === 2);
   const [draft, setDraft] = useState(name);
   const cancelledRef = useRef(false);
+  const lastCommittedRef = useRef<string | null>(null);
 
   useEffect(() => {
     setDraft(name);
@@ -268,18 +270,30 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
       setCreating(false);
     }, 1200);
   };
+  const startRename = () => {
+    setDraft(name);
+    lastCommittedRef.current = null;
+    setRenaming(true);
+  };
   const commitRename = () => {
     const next = draft.trim() || name;
     if (cancelledRef.current) {
       cancelledRef.current = false;
       setDraft(name);
+      setRenaming(false);
       return;
     }
+    if (lastCommittedRef.current === next) {
+      setRenaming(false);
+      return;
+    }
+    lastCommittedRef.current = next;
     if (id && next !== name) {
       dispatch(renameWorkspace({ tab: 'mine', id, name: next }));
       showToast({ message: 'The Workspace name change successfully', variant: 'success' });
     }
     setDraft(next);
+    setRenaming(false);
   };
   return (
     <div className="flex min-h-[calc(100vh-250px)] flex-col items-center justify-center px-8">
@@ -287,7 +301,7 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
         <WuLoader size="md" />
       ) : (
         <div className="max-w-[520px] text-center">
-          {newWorkspaceVariant === 2 ? (
+          {newWorkspaceVariant === 2 && renaming ? (
             <input
               autoFocus
               value={draft}
@@ -304,6 +318,17 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
               aria-label="New workspace name"
               className="w-full border-0 border-b-2 border-b-[#1B87E6] bg-transparent text-center text-[48px] font-light leading-[56px] text-[#545E6B] outline-none"
             />
+          ) : newWorkspaceVariant === 2 ? (
+            <p
+              className="text-[48px] font-light leading-[56px] text-[#545E6B]"
+              title="Double-click to rename"
+              onDoubleClick={e => {
+                e.stopPropagation();
+                startRename();
+              }}
+            >
+              {name}
+            </p>
           ) : null}
           <p
             className={[
