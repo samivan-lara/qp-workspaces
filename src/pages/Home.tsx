@@ -315,24 +315,22 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
               ? 'Your workspace for manage Live sessions, create polls and more.'
               : 'Create and manage Live sessions, share analytics and more.'}
           </p>
-          {newWorkspaceVariant === 1 ? (
-            <div className="mt-6 flex items-center justify-center gap-4">
-              <WuButton
-                variant="primary"
-                Icon={<span className="wm-add" aria-hidden="true" />}
-                onClick={createFirstSession}
-              >
-                New LivePoll
-              </WuButton>
-              <WuButton
-                variant="outlined"
-                Icon={<span className="wm-person-add" aria-hidden="true" />}
-                onClick={() => console.log('add members')}
-              >
-                Add members
-              </WuButton>
-            </div>
-          ) : null}
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <WuButton
+              variant="primary"
+              Icon={<span className="wm-add" aria-hidden="true" />}
+              onClick={createFirstSession}
+            >
+              New LivePoll
+            </WuButton>
+            <WuButton
+              variant="outlined"
+              Icon={<span className="wm-person-add" aria-hidden="true" />}
+              onClick={() => console.log('add members')}
+            >
+              Add members
+            </WuButton>
+          </div>
         </div>
       )}
     </div>

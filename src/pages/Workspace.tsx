@@ -422,8 +422,8 @@ export default function Workspace() {
   const dashboards = useAppSelector(s => s.workspace.dashboardByWorkspace);
 
   const createDefaultWorkspace = () => {
-    dispatch(addWorkspace({ name: 'New Workspace', description: '' }));
-    openWorkspace('New Workspace');
+    dispatch(addWorkspace({ name: 'Untitled workspace', description: '' }));
+    openWorkspace('Untitled workspace');
     showToast({ message: 'The Workspace created successfully', variant: 'success' });
   };
 
