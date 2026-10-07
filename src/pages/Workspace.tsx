@@ -23,9 +23,9 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   addWorkspace,
   deleteWorkspace,
-  renameWorkspace,
   reorderWorkspace,
   selectWorkspace,
+  updateWorkspaceInfo,
   type WorkspaceItem,
   type WorkspaceTab,
 } from '@/store/slices/workspaceSlice';
@@ -50,7 +50,7 @@ function WorkspaceCard({
   isDragSource,
   variant,
   shift,
-  onRename,
+  onUpdate,
   onDelete,
   onOpen,
   onDragStart,
@@ -61,7 +61,7 @@ function WorkspaceCard({
   isDragSource: boolean;
   variant: LabDragVariant;
   shift: string | undefined;
-  onRename: (name: string) => void;
+  onUpdate: (name: string, description: string) => void;
   onDelete: () => void;
   onOpen: () => void;
   onDragStart: (id: string) => void;
@@ -71,6 +71,7 @@ function WorkspaceCard({
   const [editing, setEditing] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [draft, setDraft] = useState(item.name);
+  const [draftDesc, setDraftDesc] = useState(item.description);
   const [hintOpen, setHintOpen] = useState(false);
   const [cursorRel, setCursorRel] = useState<{ x: number; y: number } | null>(null);
   const cancelledRef = useRef(false);
@@ -126,15 +127,21 @@ function WorkspaceCard({
     setEditing(true);
   };
 
+  const startEdit = () => {
+    setDraft(item.name);
+    setDraftDesc(item.description);
+    setEditing(true);
+  };
+
   const commit = () => {
     if (cancelledRef.current) {
       cancelledRef.current = false;
       return;
     }
     const name = draft.trim() || item.name;
-    if (name !== item.name) {
-      onRename(name);
-      showToast({ message: 'The Workspace name change successfully', variant: 'success' });
+    onUpdate(name, draftDesc.trim());
+    if (name !== item.name || draftDesc.trim() !== item.description) {
+      showToast({ message: 'The Workspace updated successfully', variant: 'success' });
     }
     setEditing(false);
   };
@@ -214,7 +221,11 @@ function WorkspaceCard({
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
                 onFocus={e => e.target.select()}
-                onBlur={commit}
+                onBlur={e => {
+                  const next = e.relatedTarget as Node | null;
+                  const card = e.currentTarget.closest('[data-workspace-card]');
+                  if (!(next && card?.contains(next))) commit();
+                }}
                 onKeyDown={e => {
                   if (e.key === 'Enter') commit();
                   if (e.key === 'Escape') cancel();
@@ -280,7 +291,7 @@ function WorkspaceCard({
                     </button>
                   }
                   options={[
-                    { label: 'Rename', icon: 'wm-edit', onClick: startRename },
+                    { label: 'Edit', icon: 'wm-edit', onClick: startEdit },
                     { label: 'Add member', icon: 'wm-person-add' },
                     {
                       label: 'Delete',
@@ -294,9 +305,24 @@ function WorkspaceCard({
               </>
             )}
           </div>
-          <p className="line-clamp-3 text-[12px] font-normal leading-[150%] text-[#3A424C]">
-            {item.description}
-          </p>
+          {editing ? (
+            <textarea
+              value={draftDesc}
+              onChange={e => setDraftDesc(e.target.value)}
+              onBlur={commit}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) commit();
+                if (e.key === 'Escape') cancel();
+              }}
+              aria-label="Workspace description"
+              rows={2}
+              className="w-full resize-none border-0 border-b border-b-[#1B87E6] bg-transparent px-2 text-[12px] font-normal leading-[150%] text-[#3A424C] outline-none"
+            />
+          ) : (
+            <p className="line-clamp-3 text-[12px] font-normal leading-[150%] text-[#3A424C]">
+              {item.description}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -417,8 +443,8 @@ export default function Workspace() {
     return sourceFor(tab).filter(item => item.name.toLowerCase().includes(q));
   };
 
-  const renameItem = (tab: TabValue, id: string, name: string) => {
-    dispatch(renameWorkspace({ tab, id, name }));
+  const updateItem = (tab: TabValue, id: string, name: string, description: string) => {
+    dispatch(updateWorkspaceInfo({ tab, id, name, description }));
   };
 
   const removeItem = (tab: TabValue, id: string) => {
@@ -718,7 +744,9 @@ export default function Workspace() {
                             variant={dragVariant}
                             shift={transforms[item.id]}
                             onOpen={() => openWorkspace(item.name)}
-                            onRename={name => renameItem(activeTab, item.id, name)}
+                            onUpdate={(name, description) =>
+                              updateItem(activeTab, item.id, name, description)
+                            }
                             onDelete={() => removeItem(activeTab, item.id)}
                             onDragStart={beginDrag}
                             onDragEnd={endDrag}

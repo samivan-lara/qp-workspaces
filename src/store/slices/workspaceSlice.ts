@@ -370,6 +370,24 @@ const workspaceSlice = createSlice({
         if (state.selectedId === action.payload.id) state.selectedName = action.payload.name;
       }
     },
+    updateWorkspaceInfo: (
+      state,
+      action: PayloadAction<{
+        tab: WorkspaceTab;
+        id: string;
+        name: string;
+        description: string;
+      }>,
+    ) => {
+      const { tab, id, name, description } = action.payload;
+      const list = tab === 'mine' ? state.myWorkspaces : state.sharedWorkspaces;
+      const item = list.find(i => i.id === id);
+      if (item) {
+        item.name = name;
+        item.description = description;
+        if (state.selectedId === id) state.selectedName = name;
+      }
+    },
     reorderWorkspace: (
       state,
       action: PayloadAction<{ tab: WorkspaceTab; fromId: string; toId: string }>,
@@ -429,5 +447,6 @@ export const {
   deleteWorkspace,
   reorderWorkspace,
   populateWorkspace,
+  updateWorkspaceInfo,
 } = workspaceSlice.actions;
 export default workspaceSlice.reducer;
