@@ -23,6 +23,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   addWorkspace,
   deleteWorkspace,
+  renameWorkspace,
   reorderWorkspace,
   selectWorkspace,
   updateWorkspaceInfo,
@@ -50,6 +51,7 @@ function WorkspaceCard({
   isDragSource,
   variant,
   shift,
+  onRename,
   onUpdate,
   onDelete,
   onOpen,
@@ -61,6 +63,7 @@ function WorkspaceCard({
   isDragSource: boolean;
   variant: LabDragVariant;
   shift: string | undefined;
+  onRename: (name: string) => void;
   onUpdate: (name: string, description: string) => void;
   onDelete: () => void;
   onOpen: () => void;
@@ -79,6 +82,7 @@ function WorkspaceCard({
   const hintTimerRef = useRef<number | null>(null);
   const lastMoveRef = useRef<{ x: number; y: number } | null>(null);
   const { showToast } = useWuShowToast();
+  const newWorkspaceVariant = useLabNewWorkspaceVariant();
 
   const clearHintTimer = () => {
     if (hintTimerRef.current !== null) {
@@ -139,9 +143,14 @@ function WorkspaceCard({
       return;
     }
     const name = draft.trim() || item.name;
-    onUpdate(name, draftDesc.trim());
-    if (name !== item.name || draftDesc.trim() !== item.description) {
-      showToast({ message: 'The Workspace updated successfully', variant: 'success' });
+    if (newWorkspaceVariant === 2) {
+      onUpdate(name, draftDesc.trim());
+      if (name !== item.name || draftDesc.trim() !== item.description) {
+        showToast({ message: 'The Workspace updated successfully', variant: 'success' });
+      }
+    } else if (name !== item.name) {
+      onRename(name);
+      showToast({ message: 'The Workspace name change successfully', variant: 'success' });
     }
     setEditing(false);
   };
@@ -221,11 +230,15 @@ function WorkspaceCard({
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
                 onFocus={e => e.target.select()}
-                onBlur={e => {
-                  const next = e.relatedTarget as Node | null;
-                  const card = e.currentTarget.closest('[data-workspace-card]');
-                  if (!(next && card?.contains(next))) commit();
-                }}
+                onBlur={
+                  newWorkspaceVariant === 2
+                    ? e => {
+                        const next = e.relatedTarget as Node | null;
+                        const card = e.currentTarget.closest('[data-workspace-card]');
+                        if (!(next && card?.contains(next))) commit();
+                      }
+                    : commit
+                }
                 onKeyDown={e => {
                   if (e.key === 'Enter') commit();
                   if (e.key === 'Escape') cancel();
@@ -291,7 +304,11 @@ function WorkspaceCard({
                     </button>
                   }
                   options={[
-                    { label: 'Edit', icon: 'wm-edit', onClick: startEdit },
+                    {
+                      label: newWorkspaceVariant === 2 ? 'Edit' : 'Rename',
+                      icon: 'wm-edit',
+                      onClick: newWorkspaceVariant === 2 ? startEdit : startRename,
+                    },
                     { label: 'Add member', icon: 'wm-person-add' },
                     {
                       label: 'Delete',
@@ -305,7 +322,7 @@ function WorkspaceCard({
               </>
             )}
           </div>
-          {editing ? (
+          {newWorkspaceVariant === 2 && editing ? (
             <textarea
               value={draftDesc}
               onChange={e => setDraftDesc(e.target.value)}
@@ -441,6 +458,10 @@ export default function Workspace() {
   const filteredFor = (tab: TabValue) => {
     const q = query.trim().toLowerCase();
     return sourceFor(tab).filter(item => item.name.toLowerCase().includes(q));
+  };
+
+  const renameItem = (tab: TabValue, id: string, name: string) => {
+    dispatch(renameWorkspace({ tab, id, name }));
   };
 
   const updateItem = (tab: TabValue, id: string, name: string, description: string) => {
@@ -744,6 +765,7 @@ export default function Workspace() {
                             variant={dragVariant}
                             shift={transforms[item.id]}
                             onOpen={() => openWorkspace(item.name)}
+                            onRename={name => renameItem(activeTab, item.id, name)}
                             onUpdate={(name, description) =>
                               updateItem(activeTab, item.id, name, description)
                             }
