@@ -332,8 +332,8 @@ function WorkspaceCard({
                 if (e.key === 'Escape') cancel();
               }}
               aria-label="Workspace description"
-              rows={2}
-              className="w-full resize-none border-0 border-b border-b-[#1B87E6] bg-transparent px-2 text-[12px] font-normal leading-[150%] text-[#3A424C] outline-none"
+              placeholder="Write the description here"
+              className="w-full min-h-0 flex-1 resize-none border-0 border-b border-b-[#1B87E6] bg-transparent px-2 text-[12px] font-normal leading-[150%] text-[#3A424C] placeholder:text-[12px] placeholder:font-normal placeholder:leading-[16px] placeholder:text-[#9B9B9B] outline-none"
             />
           ) : (
             <p className="line-clamp-3 text-[12px] font-normal leading-[150%] text-[#3A424C]">
