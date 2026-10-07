@@ -246,7 +246,9 @@ export function Layout() {
           {/* Inset: single header per page (SectionHeader h-16 px-4 border rgba) + content + footer — no duplicate toolbar */}
           <div className="flex min-h-0 flex-1 flex-col bg-[var(--wu-bg)]">
             <main className="flex-1 overflow-auto">
-              <Outlet />
+              <div className="app-content">
+                <Outlet />
+              </div>
             </main>
 
             <WuFooter>

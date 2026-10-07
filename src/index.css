@@ -11,6 +11,21 @@
   color-scheme: light;
 }
 
+/* Global content width: on ultrawide viewports (> 1920px) the content area
+   scales up to 80% of the available width (viewport minus 64px side margins),
+   centered with a 64px side margin, capped at 1740px. */
+.app-content {
+  min-width: 0;
+}
+
+@media (min-width: 1921px) {
+  .app-content {
+    width: calc((100vw - 128px) * 0.8);
+    max-width: 1740px;
+    margin-inline: auto;
+  }
+}
+
 body {
   font-family: 'Fira Sans', sans-serif;
   background: var(--wu-bg, #fff);
