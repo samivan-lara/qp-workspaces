@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { WuActivityLog, WuButton, WuLoader, useWuShowToast } from '@npm-questionpro/wick-ui-lib';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { populateWorkspace, renameWorkspace } from '@/store/slices/workspaceSlice';
@@ -253,8 +253,13 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
   const { showToast } = useWuShowToast();
   const newWorkspaceVariant = useLabNewWorkspaceVariant();
   const [creating, setCreating] = useState(false);
-  const [renaming, setRenaming] = useState(false);
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(name);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    setDraft(name);
+  }, [name]);
+
   const createFirstSession = () => {
     if (!id || creating) return;
     setCreating(true);
@@ -263,17 +268,18 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
       setCreating(false);
     }, 1200);
   };
-  const startRename = () => {
-    setDraft(name);
-    setRenaming(true);
-  };
   const commitRename = () => {
     const next = draft.trim() || name;
+    if (cancelledRef.current) {
+      cancelledRef.current = false;
+      setDraft(name);
+      return;
+    }
     if (id && next !== name) {
       dispatch(renameWorkspace({ tab: 'mine', id, name: next }));
       showToast({ message: 'The Workspace name change successfully', variant: 'success' });
     }
-    setRenaming(false);
+    setDraft(next);
   };
   return (
     <div className="flex min-h-[calc(100vh-250px)] flex-col items-center justify-center px-8">
@@ -281,7 +287,7 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
         <WuLoader size="md" />
       ) : (
         <div className="max-w-[520px] text-center">
-          {newWorkspaceVariant === 2 && renaming ? (
+          {newWorkspaceVariant === 2 ? (
             <input
               autoFocus
               value={draft}
@@ -290,48 +296,43 @@ function EmptyWorkspaceView({ name, id }: { name: string; id: string | null }) {
               onBlur={commitRename}
               onKeyDown={e => {
                 if (e.key === 'Enter') commitRename();
-                if (e.key === 'Escape') setRenaming(false);
+                if (e.key === 'Escape') {
+                  cancelledRef.current = true;
+                  (e.currentTarget as HTMLInputElement).blur();
+                }
               }}
               aria-label="New workspace name"
               className="w-full border-0 border-b-2 border-b-[#1B87E6] bg-transparent text-center text-[48px] font-light leading-[56px] text-[#545E6B] outline-none"
             />
-          ) : (
-            <p
-              className="text-[48px] font-light leading-[56px] text-[#545E6B]"
-              title={newWorkspaceVariant === 2 ? 'Double-click to rename' : undefined}
-              onDoubleClick={
-                newWorkspaceVariant === 2
-                  ? e => {
-                      e.stopPropagation();
-                      startRename();
-                    }
-                  : undefined
-              }
-            >
-              {name}
-            </p>
-          )}
-          <p className="mt-2 text-[16px] font-normal leading-6 text-[#9B9B9B]">
+          ) : null}
+          <p
+            className={[
+              'text-[16px] font-normal leading-6 text-[#9B9B9B]',
+              newWorkspaceVariant === 2 ? 'mt-2' : '',
+            ].join(' ')}
+          >
             {newWorkspaceVariant === 1
               ? 'Your workspace for manage Live sessions, create polls and more.'
               : 'Create and manage Live sessions, share analytics and more.'}
           </p>
-          <div className="mt-6 flex items-center justify-center gap-4">
-            <WuButton
-              variant="primary"
-              Icon={<span className="wm-add" aria-hidden="true" />}
-              onClick={createFirstSession}
-            >
-              New LivePoll
-            </WuButton>
-            <WuButton
-              variant="outlined"
-              Icon={<span className="wm-person-add" aria-hidden="true" />}
-              onClick={() => console.log('add members')}
-            >
-              Add members
-            </WuButton>
-          </div>
+          {newWorkspaceVariant === 1 ? (
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <WuButton
+                variant="primary"
+                Icon={<span className="wm-add" aria-hidden="true" />}
+                onClick={createFirstSession}
+              >
+                New LivePoll
+              </WuButton>
+              <WuButton
+                variant="outlined"
+                Icon={<span className="wm-person-add" aria-hidden="true" />}
+                onClick={() => console.log('add members')}
+              >
+                Add members
+              </WuButton>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
@@ -348,12 +349,16 @@ export default function Home() {
     const id = s.workspace.selectedId ?? s.workspace.myWorkspaces[0]?.id ?? null;
     return id ? s.workspace.dashboardByWorkspace[id] : undefined;
   });
+  const newWorkspaceVariant = useLabNewWorkspaceVariant();
 
   const title = selectedName ?? myWorkspaces[0]?.name ?? 'Workspaces';
+  const isEmpty = dashboard != null && dashboard.sessions.length === 0;
 
   return (
     <div className="flex flex-col">
-      <SectionHeader title={title} actions={<WuButton variant="primary">New session</WuButton>} />
+      {!(newWorkspaceVariant === 2 && isEmpty) && (
+        <SectionHeader title={title} actions={<WuButton variant="primary">New session</WuButton>} />
+      )}
       {dashboard ? (
         dashboard.sessions.length === 0 ? (
           <EmptyWorkspaceView name={title} id={selectedId} />
