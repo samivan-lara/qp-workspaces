@@ -13,7 +13,7 @@ export interface LabContextValue {
 
 export const DEFAULT_DRAG_VARIANT: LabDragVariant = 1;
 
-export const DEFAULT_NEW_WORKSPACE_VARIANT: LabNewWorkspaceVariant = 1;
+export const DEFAULT_NEW_WORKSPACE_VARIANT: LabNewWorkspaceVariant = 2;
 
 export const LabContext = createContext<LabContextValue>({
   dragVariant: DEFAULT_DRAG_VARIANT,

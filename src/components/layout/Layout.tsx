@@ -110,9 +110,9 @@ export function Layout() {
 
   const [newWorkspaceVariant, setNewWorkspaceVariant] = useState<LabNewWorkspaceVariant>(() => {
     try {
-      return localStorage.getItem('lab-new-workspace-variant') === '2' ? 2 : 1;
+      return localStorage.getItem('lab-new-workspace-variant') === '1' ? 1 : 2;
     } catch {
-      return 1;
+      return 2;
     }
   });
 
